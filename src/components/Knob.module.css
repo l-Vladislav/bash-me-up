@@ -1,0 +1,49 @@
+.knob {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.dial {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  /* Ribbed edge around a flat cap. */
+  background:
+    radial-gradient(circle, #4a463c 0 52%, transparent 54%),
+    repeating-conic-gradient(#1b1a15 0deg 9deg, #38352d 9deg 18deg);
+  box-shadow:
+    inset 0 1px 1px rgb(255 255 255 / 0.2),
+    0 2px 3px rgb(0 0 0 / 0.55),
+    0 0 0 2px rgb(0 0 0 / 0.16);
+  cursor: ns-resize;
+  touch-action: none;
+}
+
+/* Pointer mark. */
+.dial::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: calc(50% - 1px);
+  width: 2px;
+  height: 8px;
+  border-radius: 1px;
+  background: #ece5d0;
+}
+
+.dial:focus-visible {
+  outline: 2px solid #12110d;
+  outline-offset: 3px;
+}
+
+.label {
+  color: #3d392f;
+  font: 700 0.5rem/1 var(--font-label);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 rgb(255 255 255 / 0.4);
+}

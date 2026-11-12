@@ -1,9 +1,6 @@
 .terminal {
-  container-type: inline-size;
+  position: relative;
   height: 100%;
-  overflow-y: auto;
-  scrollbar-width: none;
-  padding: clamp(18px, 4.5%, 52px) clamp(18px, 5.5%, 72px);
   font-family: var(--font-terminal);
   font-size: clamp(1.0625rem, 0.7vw + 0.75rem, 1.5rem);
   line-height: 1.15;
@@ -11,17 +8,39 @@
   text-shadow: var(--glow);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+/* The scrolling picture area; the ghost layer reuses it to line up exactly. */
+.viewport {
+  container-type: inline-size;
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: clamp(18px, 4.5%, 52px) clamp(18px, 5.5%, 72px);
   cursor: text;
 }
 
-.terminal ::selection {
+.viewport ::selection {
   background: var(--phosphor);
   color: var(--screen-black);
   text-shadow: none;
 }
 
+.ghost {
+  overflow: hidden;
+  pointer-events: none;
+  animation: afterglow 0.85s ease-out forwards;
+}
+
+/* Freshly written rows bloom, then settle to their steady glow. */
 .line {
   min-height: 1lh;
+  animation: excite 0.45s ease-out;
+}
+
+.ghost .line {
+  animation: none;
 }
 
 /* 54 columns of banner must fit: one VT323 glyph is 0.4em wide. */
@@ -110,8 +129,31 @@
   }
 }
 
+@keyframes excite {
+  from {
+    text-shadow:
+      0 0 2px var(--phosphor-bright),
+      0 0 16px var(--phosphor);
+  }
+}
+
+@keyframes afterglow {
+  from {
+    opacity: 0.5;
+  }
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .prompt:focus-within .cursor {
+  .prompt:focus-within .cursor,
+  .line {
     animation: none;
+  }
+
+  .ghost {
+    display: none;
   }
 }

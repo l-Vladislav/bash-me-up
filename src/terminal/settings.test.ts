@@ -7,17 +7,15 @@ describe('parseSettings', () => {
   });
 
   it('restores valid settings', () => {
-    expect(parseSettings('{"phosphor":"green","crt":false}')).toEqual({
-      phosphor: 'green',
-      crt: false,
-    });
+    const stored = { phosphor: 'green', crt: false, brightness: 0.2, contrast: 1 };
+    expect(parseSettings(JSON.stringify(stored))).toEqual(stored);
   });
 
   it('ignores corrupt or unknown values field by field', () => {
     expect(parseSettings('not json')).toEqual(DEFAULT_SETTINGS);
     expect(parseSettings('null')).toEqual(DEFAULT_SETTINGS);
-    expect(parseSettings('{"phosphor":"purple","crt":false}')).toEqual({
-      phosphor: DEFAULT_SETTINGS.phosphor,
+    expect(parseSettings('{"phosphor":"purple","crt":false,"brightness":7}')).toEqual({
+      ...DEFAULT_SETTINGS,
       crt: false,
     });
   });

@@ -1,0 +1,51 @@
+.rocker {
+  display: flex;
+  flex: none;
+  padding: 2px;
+  border: 0;
+  border-radius: 4px;
+  background: #14130f;
+  box-shadow:
+    inset 0 1px 3px rgb(0 0 0 / 0.9),
+    0 1px 0 rgb(255 255 255 / 0.35);
+  cursor: pointer;
+}
+
+.half {
+  display: grid;
+  place-items: center;
+  width: 17px;
+  height: 20px;
+  color: #b9b29d;
+  font: 700 0.5625rem/1 var(--font-label);
+  transition:
+    background 80ms,
+    color 80ms;
+}
+
+/* The raised half catches the light; the pressed half sits in shadow. */
+.half:first-child {
+  border-radius: 3px 0 0 3px;
+  background: linear-gradient(100deg, #55514a, #3a3731);
+}
+
+.half:last-child {
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(100deg, #22201b, #2c2a24);
+  color: #ece5d0;
+}
+
+.rocker[aria-checked='false'] .half:first-child {
+  background: linear-gradient(260deg, #22201b, #2c2a24);
+  color: #ece5d0;
+}
+
+.rocker[aria-checked='false'] .half:last-child {
+  background: linear-gradient(260deg, #55514a, #3a3731);
+  color: #b9b29d;
+}
+
+.rocker:focus-visible {
+  outline: 2px solid #12110d;
+  outline-offset: 2px;
+}

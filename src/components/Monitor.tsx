@@ -1,56 +1,117 @@
 import { useId, useMemo, useRef, useState } from 'react';
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { createBarrelMap, displacementScale, supportsBarrel } from '../crt/barrel';
 import { useElementSize } from '../hooks/useElementSize';
+import type { UpdateSettings } from '../hooks/useSettings';
+import type { Settings } from '../terminal/settings';
+import { Knob } from './Knob';
 import styles from './Monitor.module.css';
+import { PowerSwitch } from './PowerSwitch';
 
 /** How far the glass bulges: 0 is flat, ~0.05 is a fishbowl. */
 const CURVATURE = 0.032;
 
+/** CSS filter amounts at the knobs' end stops; the centre position is neutral. */
+const BRIGHTNESS_RANGE = { min: 0.5, max: 1.5 };
+const CONTRAST_RANGE = { min: 0.6, max: 1.4 };
+
+const scale = (position: number, range: { min: number; max: number }): number =>
+  range.min + position * (range.max - range.min);
+
 interface MonitorProps {
-  /** Turns the tube simulation (curvature, scanlines, flicker) on or off. */
-  crt: boolean;
-  /** Model name embossed on the case. */
+  /** Model name on the nameplate. */
   model: string;
-  /** Controls on the front panel, below the screen. */
+  settings: Settings;
+  onSettingsChange: UpdateSettings;
+  powered: boolean;
+  onPowerChange: (powered: boolean) => void;
+  /** Extra controls on the front panel, next to the nameplate. */
   panel: ReactNode;
   children: ReactNode;
 }
 
-/** A monochrome video terminal: plastic case, curved glass, glowing phosphor. */
-export function Monitor({ crt, model, panel, children }: MonitorProps) {
+const classNames = (...names: (string | false | undefined)[]): string =>
+  names.filter(Boolean).join(' ');
+
+/** A monochrome video terminal on a desk: plastic case, curved glass, glowing phosphor. */
+export function Monitor({
+  model,
+  settings,
+  onSettingsChange,
+  powered,
+  onPowerChange,
+  panel,
+  children,
+}: MonitorProps) {
   const filterId = useId();
   const imageRef = useRef<HTMLDivElement>(null);
   const size = useElementSize(imageRef);
   const [canBend] = useState(supportsBarrel);
 
-  const bend = crt && canBend && size.width > 0 && size.height > 0;
+  const bend = settings.crt && canBend && size.width > 0 && size.height > 0;
   const map = useMemo(() => (bend ? createBarrelMap(size) : ''), [bend, size]);
 
+  const picture: CSSProperties = {
+    filter: `brightness(${scale(settings.brightness, BRIGHTNESS_RANGE)}) contrast(${scale(settings.contrast, CONTRAST_RANGE)})`,
+  };
+
   return (
-    <main className={styles.room}>
-      <div className={crt ? styles.case : `${styles.case} ${styles.flat}`}>
-        <div className={styles.well}>
-          <div className={styles.screen}>
-            <div
-              ref={imageRef}
-              className={styles.image}
-              style={bend ? { filter: `url(#${CSS.escape(filterId)})` } : undefined}
-            >
-              <div className={styles.beam}>{children}</div>
-            </div>
-            <div className={styles.scanlines} />
-            <div className={styles.refresh} />
-            <div className={styles.flicker} />
-            <div className={styles.glass} />
-          </div>
+    <main className={classNames(styles.room, !powered && styles.off, !settings.crt && styles.flat)}>
+      <div className={styles.wallGlow} />
+
+      <div className={styles.stage}>
+        <div className={styles.desk}>
+          <div className={styles.deskGlow} />
         </div>
 
-        <footer className={styles.panel}>
-          <span className={styles.badge}>{model}</span>
-          {panel}
-          <span className={styles.led} role="img" aria-label="Power on" />
-        </footer>
+        <div className={styles.case}>
+          <div className={styles.vents} />
+          <div className={styles.well}>
+            <div className={styles.screen} style={picture} inert={!powered}>
+              <div
+                ref={imageRef}
+                className={styles.image}
+                style={bend ? { filter: `url(#${CSS.escape(filterId)})` } : undefined}
+              >
+                <div className={styles.beam}>
+                  <div className={styles.raster} />
+                  {children}
+                </div>
+              </div>
+              <div className={styles.scanlines} />
+              <div className={styles.refresh} />
+              <div className={styles.flicker} />
+              <div className={styles.softness} />
+              {!powered && <div className={styles.dot} />}
+              <div className={styles.glass} />
+            </div>
+          </div>
+
+          <footer className={styles.panel}>
+            <span className={styles.nameplate}>{model}</span>
+            {panel}
+            <div className={styles.controls}>
+              <Knob
+                label="Bright"
+                value={settings.brightness}
+                onChange={(brightness) => onSettingsChange({ brightness })}
+              />
+              <Knob
+                label="Contrast"
+                value={settings.contrast}
+                onChange={(contrast) => onSettingsChange({ contrast })}
+              />
+            </div>
+            <PowerSwitch on={powered} onChange={onPowerChange} />
+            <span
+              className={styles.led}
+              role="img"
+              aria-label={powered ? 'Power on' : 'Power off'}
+            />
+          </footer>
+        </div>
+
+        <div className={styles.foot} />
       </div>
 
       {bend && (

@@ -5,26 +5,38 @@ import { OutputLine } from './OutputLine';
 import { Prompt } from './Prompt';
 import styles from './Terminal.module.css';
 
+interface TerminalProps {
+  shell: Shell;
+  /** Ignores all input, e.g. while the monitor is switched off. */
+  disabled?: boolean;
+}
+
 const hasSelection = (): boolean => (window.getSelection()?.toString() ?? '') !== '';
 
-export function Terminal({ entries, busy, history, run, skip }: Shell) {
+const scrollToEnd = (element: HTMLElement | null): void => {
+  if (element) element.scrollTop = element.scrollHeight;
+};
+
+const ignoreCommand = (): void => undefined;
+
+export function Terminal({ shell, disabled = false }: TerminalProps) {
+  const { screen, busy, history, run, skip } = shell;
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Keep the newest output in view, like paper feeding out of a teletype.
   useLayoutEffect(() => {
-    const scroller = scrollRef.current;
-    if (scroller) scroller.scrollTop = scroller.scrollHeight;
-  }, [entries, busy]);
+    scrollToEnd(scrollRef.current);
+  }, [screen.entries, busy]);
 
   useEffect(() => {
-    if (!busy) inputRef.current?.focus({ preventScroll: true });
-  }, [busy]);
+    if (!busy && !disabled) inputRef.current?.focus({ preventScroll: true });
+  }, [busy, disabled]);
 
   // Any key skips a printout in progress; otherwise typing anywhere lands in the prompt.
   const handleKeyDown = useEffectEvent((event: KeyboardEvent): void => {
-    if (event.ctrlKey || event.metaKey || event.altKey) return;
-    if (event.target instanceof HTMLButtonElement || event.target instanceof HTMLAnchorElement) {
+    if (disabled || event.ctrlKey || event.metaKey || event.altKey) return;
+    if (event.target instanceof Element && event.target.closest('button, a, [role="slider"]')) {
       return;
     }
     if (busy) {
@@ -46,13 +58,30 @@ export function Terminal({ entries, busy, history, run, skip }: Shell) {
   };
 
   return (
-    <div ref={scrollRef} className={styles.terminal} onClick={handleClick}>
-      <div role="log" aria-live="polite">
-        {entries.map((entry) => (
-          <OutputLine key={entry.id} line={entry.line} onCommand={run} />
-        ))}
+    <div className={styles.terminal}>
+      {/* Phosphor persistence: the picture that was just wiped fades out behind the new one. */}
+      {screen.wipes > 0 && (
+        <div
+          key={screen.wipes}
+          ref={scrollToEnd}
+          className={`${styles.viewport} ${styles.ghost}`}
+          aria-hidden="true"
+          inert
+        >
+          {screen.ghost.map((entry) => (
+            <OutputLine key={entry.id} line={entry.line} onCommand={ignoreCommand} />
+          ))}
+        </div>
+      )}
+
+      <div ref={scrollRef} className={styles.viewport} onClick={handleClick}>
+        <div role="log" aria-live="polite">
+          {screen.entries.map((entry) => (
+            <OutputLine key={entry.id} line={entry.line} onCommand={run} />
+          ))}
+        </div>
+        {!busy && <Prompt label={PROMPT} history={history} inputRef={inputRef} onSubmit={run} />}
       </div>
-      {!busy && <Prompt label={PROMPT} history={history} inputRef={inputRef} onSubmit={run} />}
     </div>
   );
 }

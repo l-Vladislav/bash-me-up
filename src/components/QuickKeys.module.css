@@ -1,5 +1,6 @@
 .keys {
   display: flex;
+  flex: 1;
   gap: clamp(5px, 0.8vw, 10px);
   min-width: 0;
   padding: 6px 2px 9px;

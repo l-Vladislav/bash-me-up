@@ -173,8 +173,8 @@
   ],
 
   "terminal": {
-    "model": "VL-3270",
-    "title": "VL-3270 VIDEO DISPLAY TERMINAL",
+    "model": "VL-42",
+    "title": "VL-42 VIDEO DISPLAY TERMINAL",
     "rom": "ROM 2.6",
     "user": "guest",
     "host": "larionov",

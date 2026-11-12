@@ -9,7 +9,7 @@
                                                        /_/
 ```
 
-**A portfolio that boots on a 1984 monochrome video terminal.**
+**A portfolio that boots on a 1984 monochrome video terminal, the VL-42.**
 
 [![Deploy](https://github.com/l-Vladislav/bash-me-up/actions/workflows/deploy.yml/badge.svg)](https://github.com/l-Vladislav/bash-me-up/actions/workflows/deploy.yml)
 ![React 19](https://img.shields.io/badge/React-19-ffb000?logo=react&logoColor=black)
@@ -54,14 +54,22 @@ guest@larionov:~$ help
 
 No canvas, no WebGL, no images: the screen is ordinary selectable DOM text.
 
-| Effect             | Technique                                                                                                                                                                                            |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Curved glass       | A real barrel distortion. An SVG `feDisplacementMap` shifts every pixel by `p * strength * r²`, read from a 96×96 map generated at runtime ([`src/crt/barrel.ts`](src/crt/barrel.ts)).               |
-| Phosphor colour    | One CSS custom property, `--phosphor`. Dim and bright tones, glow and the power LED all derive from it with `color-mix()`, so a theme is a single line.                                              |
-| Glow               | Layered `text-shadow` bloom around lit pixels.                                                                                                                                                       |
-| Scanlines, flicker | Pure CSS overlays above the image: a repeating gradient, a drifting refresh band and a faint brightness flutter.                                                                                     |
-| Power-on           | The image collapses to a bright line and unfolds, then a self test prints at "2400 baud".                                                                                                            |
-| Accessibility      | Animations stop under `prefers-reduced-motion`, output is an ARIA live log, and `crt off` gives a flat, effect-free panel. The distortion is skipped on Safari and phones, where it would misbehave. |
+- **Curved glass.** A real barrel distortion: an SVG `feDisplacementMap` shifts every pixel by
+  `p * strength * r²`, read from a 96×96 map generated at runtime
+  ([`src/crt/barrel.ts`](src/crt/barrel.ts)). The lit raster sits inside the distorted layer, so
+  its edges bow inwards and leave dark glass between picture and bezel.
+- **Phosphor.** One CSS custom property, `--phosphor`. Dim and bright tones, the glow, the power
+  LED and the light the screen throws on the wall and the desk all derive from it with
+  `color-mix()`, so a theme is a single line.
+- **Persistence.** Freshly written rows bloom and settle; a wiped screen lingers as a fading
+  afterimage, the way slow phosphor does.
+- **Tube artefacts.** Scanlines, a drifting refresh band, a faint flicker, soft focus in the
+  corners and an occasional one-pixel slip of the horizontal hold. All CSS.
+- **Working controls.** The brightness and contrast knobs turn (drag, arrow keys, double-click to
+  centre), and the power switch collapses the picture into a dot; switching back on is a cold boot.
+- **Accessibility.** Animations stop under `prefers-reduced-motion`, output is an ARIA live log,
+  the knobs are real sliders, and `crt off` gives a flat, effect-free panel. The distortion is
+  skipped on Safari and phones, where it would misbehave.
 
 ## Editing the content
 
@@ -85,11 +93,12 @@ src/
 ├── terminal/            framework-free core, fully unit-tested
 │   ├── line.ts          output model: commands return data, never markup
 │   ├── commands/        one pure function per command + registry
+│   ├── screen.ts        reducer for the picture and its fading afterimage
 │   ├── completion.ts    tab completion
 │   └── printer.ts       line-by-line "serial link" output queue
 ├── crt/                 barrel-distortion maths
 ├── hooks/               the thin layer binding the core to React
-└── components/          Monitor, Terminal, Prompt, QuickKeys (CSS Modules)
+└── components/          Monitor, Terminal, Prompt, Knob, PowerSwitch... (CSS Modules)
 ```
 
 Commands are pure: they take arguments and return lines plus optional _effects_ (`clear`,

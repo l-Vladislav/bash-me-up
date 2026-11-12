@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Monitor } from './components/Monitor';
 import { QuickKeys } from './components/QuickKeys';
 import { Terminal } from './components/Terminal';
@@ -7,15 +8,25 @@ import { useTerminal } from './hooks/useTerminal';
 
 export function App() {
   const [settings, updateSettings] = useSettings();
+  const [powered, setPowered] = useState(true);
   const shell = useTerminal(settings, updateSettings);
+
+  const handlePowerChange = (on: boolean): void => {
+    // Switching back on is a cold start: the terminal boots from scratch.
+    if (on) shell.reboot();
+    setPowered(on);
+  };
 
   return (
     <Monitor
-      crt={settings.crt}
       model={terminal.model}
-      panel={<QuickKeys commands={terminal.quickKeys} onRun={shell.run} />}
+      settings={settings}
+      onSettingsChange={updateSettings}
+      powered={powered}
+      onPowerChange={handlePowerChange}
+      panel={<QuickKeys commands={terminal.quickKeys} disabled={!powered} onRun={shell.run} />}
     >
-      <Terminal {...shell} />
+      <Terminal shell={shell} disabled={!powered} />
     </Monitor>
   );
 }
