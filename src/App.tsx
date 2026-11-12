@@ -24,7 +24,7 @@ export function App() {
       onSettingsChange={updateSettings}
       powered={powered}
       onPowerChange={handlePowerChange}
-      panel={<QuickKeys commands={terminal.quickKeys} disabled={!powered} onRun={shell.run} />}
+      panel={<QuickKeys commands={terminal.quickKeys} disabled={!powered} onRun={shell.click} />}
     >
       <Terminal shell={shell} disabled={!powered} />
     </Monitor>

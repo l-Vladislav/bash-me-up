@@ -1,5 +1,4 @@
 import { useEffect, useEffectEvent, useLayoutEffect, useRef } from 'react';
-import { PROMPT } from '../hooks/useTerminal';
 import type { Shell } from '../hooks/useTerminal';
 import { OutputLine } from './OutputLine';
 import { Prompt } from './Prompt';
@@ -20,7 +19,7 @@ const scrollToEnd = (element: HTMLElement | null): void => {
 const ignoreCommand = (): void => undefined;
 
 export function Terminal({ shell, disabled = false }: TerminalProps) {
-  const { screen, busy, history, run, skip } = shell;
+  const { screen, busy, history, prompt, interactive, run, click, interrupt, clear, skip } = shell;
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -77,10 +76,20 @@ export function Terminal({ shell, disabled = false }: TerminalProps) {
       <div ref={scrollRef} className={styles.viewport} onClick={handleClick}>
         <div role="log" aria-live="polite">
           {screen.entries.map((entry) => (
-            <OutputLine key={entry.id} line={entry.line} onCommand={run} />
+            <OutputLine key={entry.id} line={entry.line} onCommand={click} />
           ))}
         </div>
-        {!busy && <Prompt label={PROMPT} history={history} inputRef={inputRef} onSubmit={run} />}
+        {!busy && (
+          <Prompt
+            label={prompt}
+            history={interactive ? [] : history}
+            completion={!interactive}
+            inputRef={inputRef}
+            onSubmit={run}
+            onInterrupt={interrupt}
+            onClear={clear}
+          />
+        )}
       </div>
     </div>
   );

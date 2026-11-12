@@ -30,23 +30,46 @@ the monitor's front panel if you would rather not type.
 ```
 guest@larionov:~$ help
 
-  help                  Show this list
-  about                 Who I am and what I do
-  experience [1-3]      Work history; pass a number for details
-  skills                Technologies I work with
-  projects [1-5]        Things I have built; pass a number for details
-  education             Degree
-  contact               How to reach me
-  theme [amber|green]   Swap the phosphor colour
-  crt [on|off]          Toggle the CRT simulation
-  history               Commands typed this session
-  clear                 Clear the screen (Ctrl+L)
-  reboot                Restart the terminal
+portfolio
+  about                    Who I am and what I do
+  experience [1-3]         Work history; pass a number for details
+  skills                   Technologies I work with
+  projects [1-5]           Things I have built; pass a number for details
+  education                Degree
+  contact                  How to reach me
+
+games
+  lander                   Land on the Moon in one piece
+  hangman                  Guess the word before the drawing is done
+  tictactoe                Noughts and crosses against the machine
+  guess                    Guess the number I am thinking of
+
+tools
+  calc <expression>        Evaluate arithmetic, e.g. calc 2^10 / 4
+  banner <text>            Print text in big letters
+  morse <text|code>        Encode text as Morse code, or decode it
+  fortune                  An aphorism from the machine room
+  cal [month] [year]       Show a calendar
+  date                     Print the date and time
+  uptime                   How long the terminal has been on
+  uname [-a]               Print system information
+  echo <text>              Print the arguments
+
+terminal
+  help                     Show this list
+  man <command>            Manual page for a command
+  theme [amber|green]      Swap the phosphor colour
+  crt [on|off]             Toggle the CRT simulation
+  history                  Commands typed this session
+  clear                    Clear the screen (Ctrl+L)
+  reboot                   Restart the terminal
 ```
 
 - **Tab** completes commands and arguments, **Up/Down** recall history.
 - Every highlighted word on screen is clickable, so the site works without a keyboard.
 - `ls` and `cat about.txt` work too, for visitors with shell habits.
+- Games take over the prompt until they end; `quit` or **Ctrl+C** hands it back. The
+  tic-tac-toe board is clickable too.
 - Deep links: [`?run=projects`](https://l-vladislav.github.io/bash-me-up/?run=projects) opens the
   site and types the command for you.
 
@@ -121,7 +144,7 @@ src/
 ├── content/             typed access to the content, boot sequence
 ├── terminal/            framework-free core, fully unit-tested
 │   ├── line.ts          output model: commands return data, never markup
-│   ├── commands/        one pure function per command + registry
+│   ├── commands/        one pure function per command + registry, games/, tools/
 │   ├── screen.ts        reducer for the picture and its fading afterimage
 │   ├── completion.ts    tab completion
 │   └── printer.ts       line-by-line "serial link" output queue
@@ -131,7 +154,9 @@ src/
 ```
 
 Commands are pure: they take arguments and return lines plus optional _effects_ (`clear`,
-`set-phosphor`, ...) for the shell to apply. That keeps the whole command layer testable without a
+`set-phosphor`, ...) for the shell to apply. Games are pure too: a command can start a _session_,
+an immutable state machine that turns each line of input into output and the next session.
+Randomness and the clock are passed in, so every game is played through in the tests. That keeps the whole command layer testable without a
 DOM and makes adding a command a one-file change.
 
 ## Development

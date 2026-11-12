@@ -3,18 +3,32 @@ import type { KeyboardEvent, RefObject } from 'react';
 import { complete } from '../terminal/completion';
 import styles from './Terminal.module.css';
 
+const hasSelection = (): boolean => (window.getSelection()?.toString() ?? '') !== '';
+
 interface PromptProps {
   label: string;
   history: readonly string[];
+  /** Tab completes shell commands; off while a program owns the prompt. */
+  completion: boolean;
   inputRef: RefObject<HTMLInputElement | null>;
   onSubmit: (input: string) => void;
+  onInterrupt: (typed: string) => void;
+  onClear: () => void;
 }
 
 /**
  * The command line. A real (invisible) `<input>` owns focus, IME and mobile
  * keyboards; what the visitor sees is a mirror of its value with a block cursor.
  */
-export function Prompt({ label, history, inputRef, onSubmit }: PromptProps) {
+export function Prompt({
+  label,
+  history,
+  completion,
+  inputRef,
+  onSubmit,
+  onInterrupt,
+  onClear,
+}: PromptProps) {
   const [value, setValue] = useState('');
   const [caret, setCaret] = useState(0);
   /** Index into `history` while recalling; `null` when typing a fresh line. */
@@ -43,7 +57,7 @@ export function Prompt({ label, history, inputRef, onSubmit }: PromptProps) {
       replaceValue('');
     } else if (event.key === 'Tab') {
       event.preventDefault();
-      replaceValue(complete(value));
+      if (completion) replaceValue(complete(value));
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
       recall(-1);
@@ -52,9 +66,12 @@ export function Prompt({ label, history, inputRef, onSubmit }: PromptProps) {
       recall(1);
     } else if (withControl && event.key.toLowerCase() === 'l') {
       event.preventDefault();
-      onSubmit('clear');
-    } else if (event.ctrlKey && event.key.toLowerCase() === 'c' && value !== '') {
+      onClear();
+    } else if (event.ctrlKey && event.key.toLowerCase() === 'c' && !hasSelection()) {
+      // Ctrl+C copies when text is selected; otherwise it interrupts, as in a real shell.
       event.preventDefault();
+      onInterrupt(value);
+      setRecalled(null);
       replaceValue('');
     }
   };

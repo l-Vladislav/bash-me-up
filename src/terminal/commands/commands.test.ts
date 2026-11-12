@@ -5,7 +5,13 @@ import { DEFAULT_SETTINGS } from '../settings';
 import { commands, execute, tokenize } from './index';
 import type { CommandContext } from './index';
 
-const context: CommandContext = { settings: DEFAULT_SETTINGS, history: [] };
+const context: CommandContext = {
+  settings: DEFAULT_SETTINGS,
+  history: [],
+  random: () => 0,
+  now: new Date(2026, 10, 12, 19, 44, 47).getTime(),
+  bootedAt: new Date(2026, 10, 12, 18, 30, 0).getTime(),
+};
 
 const output = (input: string, overrides: Partial<CommandContext> = {}): string =>
   execute(input, { ...context, ...overrides })
