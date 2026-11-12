@@ -1,0 +1,189 @@
+{
+  "profile": {
+    "name": "Vladislav Larionov",
+    "title": "Senior Full-Stack Engineer",
+    "focus": "Angular / React / C# / Python",
+    "location": "Israel",
+    "summary": [
+      "Senior full-stack engineer with 10+ years in product development and 4+ years leading a team of 5.",
+      "I led an AngularJS to Angular 17 migration with zero downtime, built a real-time BI platform used by ~300 external clients and a no-code A/B testing platform used by ~200 clients, and delivered a GovTech mobile MVP in 6 months.",
+      "Hands-on with AI-assisted development and LLM / RAG / MCP integrations."
+    ],
+    "stats": [
+      { "value": "10+", "label": "years in product development" },
+      { "value": "4+", "label": "years leading a team of 5" },
+      { "value": "+30%", "label": "render performance after the Angular 17 migration" },
+      { "value": "-50%", "label": "build time after the same migration" }
+    ],
+    "languages": ["Russian (native)", "English (C1)", "Hebrew (basic)"]
+  },
+
+  "contact": {
+    "note": "The fastest way to reach me is email.",
+    "links": [
+      {
+        "label": "email",
+        "text": "vladislav.larionov@hotmail.com",
+        "href": "mailto:vladislav.larionov@hotmail.com"
+      },
+      {
+        "label": "linkedin",
+        "text": "linkedin.com/in/vladislav-larionov",
+        "href": "https://www.linkedin.com/in/vladislav-larionov"
+      },
+      {
+        "label": "github",
+        "text": "github.com/l-Vladislav",
+        "href": "https://github.com/l-Vladislav"
+      }
+    ]
+  },
+
+  "experience": [
+    {
+      "title": "Senior Full-Stack Engineer",
+      "company": "My Muni Inc. (GovTech startup)",
+      "location": "Israel",
+      "period": "01/2025 - present",
+      "highlights": [
+        "Delivered the product MVP in 6 months as one of 3 engineers; launched to a pilot with test users.",
+        "Built the web and mobile app (React/Next.js, Capacitor) on a Django/PostgreSQL backend.",
+        "Built push notifications end to end: backend triggers, native delivery (incl. FCM), scalable front-end handling.",
+        "Developed interactive maps with custom themes and 3D objects for the mobile app.",
+        "Turned Figma designs into development plans and implemented complex multi-layer animations in React.",
+        "Set up and maintained AWS infrastructure with Terraform (Docker, Redis, PostgreSQL).",
+        "Designed an AI assistant architecture over internal data and services (RAG / MCP approaches)."
+      ],
+      "stack": [
+        "Python",
+        "Django",
+        "React",
+        "Next.js",
+        "TypeScript",
+        "MobX",
+        "Capacitor",
+        "PostgreSQL",
+        "AWS",
+        "Terraform",
+        "Redis",
+        "Docker",
+        "RAG",
+        "MCP"
+      ]
+    },
+    {
+      "title": "Lead Software Engineer",
+      "company": "Yumasoft Inc.",
+      "location": "St. Petersburg, Russia",
+      "period": "06/2021 - 01/2025",
+      "highlights": [
+        "Led a team of 5 developers; grew 4 juniors to senior level and shortened the release cycle from 4 to 3 weeks.",
+        "Led the phased AngularJS to Angular 17 migration of a large no-code, configuration-driven application: zero migration-related downtime, all client configurations preserved, +30% render performance, -50% build time.",
+        "Designed and delivered a low-code BI dashboard with real-time reports and a queue-based notification service for exports; used by ~100 people in 3 departments and ~300 external clients.",
+        "Built or migrated 1,000+ reports from the legacy system; auto-filters halved report setup time.",
+        "Delivered a no-code A/B testing platform used by ~200 clients (~1,000 concurrent experiments), saving ~30 dev-hours a month and enabling a new paid subscription tier.",
+        "Contributed to the ColdFusion to C# migration of the core backend: architecture design and development."
+      ],
+      "stack": [
+        "Angular",
+        "TypeScript",
+        "RxJS",
+        "NgRx",
+        "C#",
+        ".NET",
+        "Python",
+        "MSSQL",
+        "MySQL",
+        "Azure",
+        "Docker",
+        "Jest",
+        "Cypress",
+        "Power BI"
+      ]
+    },
+    {
+      "title": "Software Engineer",
+      "company": "Yumasoft Inc.",
+      "location": "St. Petersburg, Russia",
+      "period": "09/2016 - 06/2021",
+      "highlights": [
+        "Started the migration of the main ColdFusion monolith to C# and a microservices architecture.",
+        "Cut client configuration load time from 15 s to 3 s by optimizing legacy components and database queries.",
+        "Built and maintained full-stack business applications with Angular, ColdFusion and MSSQL."
+      ],
+      "stack": ["Angular", "TypeScript", "C#", "ColdFusion", "MSSQL"]
+    }
+  ],
+
+  "skills": [
+    {
+      "name": "Frontend",
+      "items": ["Angular", "React", "Next.js", "TypeScript", "RxJS/NgRx", "Three.js"]
+    },
+    { "name": "Backend", "items": ["Python (Django)", "C#/.NET (ASP.NET Core)", "Node.js"] },
+    { "name": "Data", "items": ["PostgreSQL", "MSSQL", "MySQL", "Redis"] },
+    { "name": "Cloud", "items": ["AWS (Terraform)", "Azure", "Docker", "CI/CD"] },
+    { "name": "Quality", "items": ["REST APIs", "Microservices", "Jest", "Cypress", "Git"] },
+    { "name": "AI", "items": ["LLM integrations", "RAG", "MCP", "AI agents", "Claude Code"] },
+    {
+      "name": "Leadership",
+      "items": ["Agile", "Team leadership", "Project planning", "Mentoring"]
+    }
+  ],
+
+  "projects": [
+    {
+      "name": "GovTech mobile MVP",
+      "tagline": "My Muni, 2025",
+      "description": "Web and mobile app for a GovTech startup, shipped to a pilot in 6 months by a team of 3: push notifications, interactive 3D maps, AWS infrastructure as code.",
+      "stack": ["React", "Next.js", "Capacitor", "Django", "PostgreSQL", "AWS", "Terraform"]
+    },
+    {
+      "name": "AngularJS to Angular 17 migration",
+      "tagline": "Yumasoft, team lead",
+      "description": "Phased migration of a large configuration-driven product with zero downtime and every client configuration preserved. +30% render performance, -50% build time.",
+      "stack": ["Angular 17", "TypeScript", "RxJS", "NgRx"]
+    },
+    {
+      "name": "Real-time BI platform",
+      "tagline": "Yumasoft, design and delivery",
+      "description": "Low-code dashboards with real-time reports and a queue-based export notification service. 1,000+ reports, ~300 external clients.",
+      "stack": ["Angular", "TypeScript", "MSSQL", "Azure"]
+    },
+    {
+      "name": "No-code A/B testing platform",
+      "tagline": "Yumasoft, design and delivery",
+      "description": "Lets ~200 clients launch experiments without developers: ~1,000 concurrent experiments and a new paid subscription tier.",
+      "stack": ["Angular", "TypeScript", "RxJS"]
+    },
+    {
+      "name": "bash-me-up",
+      "tagline": "this terminal",
+      "description": "The portfolio you are looking at: a monochrome CRT terminal with real barrel distortion, built with React and TypeScript.",
+      "stack": ["React", "TypeScript", "Vite", "SVG filters"],
+      "href": "https://github.com/l-Vladislav/bash-me-up"
+    }
+  ],
+
+  "education": [
+    {
+      "degree": "BSE in Software Engineering",
+      "school": "Saint Petersburg State University of Aerospace Instrumentation"
+    }
+  ],
+
+  "terminal": {
+    "model": "VL-3270",
+    "title": "VL-3270 VIDEO DISPLAY TERMINAL",
+    "rom": "ROM 2.6",
+    "user": "guest",
+    "host": "larionov",
+    "bootChecks": [
+      { "label": "MEMORY TEST", "result": "640K OK" },
+      { "label": "KEYBOARD", "result": "OK" },
+      { "label": "CARRIER", "result": "CONNECT 2400" },
+      { "label": "LOADING PORTFOLIO", "result": "DONE" }
+    ],
+    "quickKeys": ["help", "about", "experience", "skills", "projects", "contact", "theme"]
+  }
+}
