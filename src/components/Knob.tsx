@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import type { KeyboardEvent, PointerEvent } from 'react';
+import type { KeyboardEvent, PointerEvent, WheelEvent } from 'react';
 import styles from './Knob.module.css';
 
 interface KnobProps {
@@ -12,13 +12,14 @@ interface KnobProps {
 /** Degrees of rotation between the two end stops. */
 const SWEEP = 270;
 const KEY_STEP = 0.05;
+const WHEEL_STEP = 0.04;
 /** Pixels of vertical drag for a full sweep. */
 const DRAG_RANGE = 140;
 const CENTRE = 0.5;
 
 const clamp = (value: number): number => Math.min(1, Math.max(0, value));
 
-/** A rotary control: drag up or down, use the arrow keys, double-click to centre. */
+/** A rotary control: drag, scroll the wheel, use the arrow keys, double-click to centre. */
 export function Knob({ label, value, onChange }: KnobProps) {
   const drag = useRef<{ y: number; value: number } | null>(null);
 
@@ -34,6 +35,11 @@ export function Knob({ label, value, onChange }: KnobProps) {
 
   const handlePointerEnd = (): void => {
     drag.current = null;
+  };
+
+  // Scrolling up turns the knob clockwise.
+  const handleWheel = (event: WheelEvent<HTMLDivElement>): void => {
+    if (event.deltaY !== 0) onChange(clamp(value - Math.sign(event.deltaY) * WHEEL_STEP));
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
@@ -67,6 +73,7 @@ export function Knob({ label, value, onChange }: KnobProps) {
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerEnd}
         onPointerCancel={handlePointerEnd}
+        onWheel={handleWheel}
         onDoubleClick={() => onChange(CENTRE)}
         onKeyDown={handleKeyDown}
       />

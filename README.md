@@ -59,14 +59,14 @@ No canvas, no WebGL, no images: the screen is ordinary selectable DOM text.
   ([`src/crt/barrel.ts`](src/crt/barrel.ts)). The lit raster sits inside the distorted layer, so
   its edges bow inwards and leave dark glass between picture and bezel.
 - **Phosphor.** One CSS custom property, `--phosphor`. Dim and bright tones, the glow, the power
-  LED and the light the screen throws on the wall and the desk all derive from it with
+  LED and the light the screen throws on the wall all derive from it with
   `color-mix()`, so a theme is a single line.
 - **Persistence.** Freshly written rows bloom and settle; a wiped screen lingers as a fading
   afterimage, the way slow phosphor does.
-- **Tube artefacts.** Scanlines, a drifting refresh band, a faint flicker, soft focus in the
-  corners and an occasional one-pixel slip of the horizontal hold. All CSS.
-- **Working controls.** The brightness and contrast knobs turn (drag, arrow keys, double-click to
-  centre), and the power switch collapses the picture into a dot; switching back on is a cold boot.
+- **Tube artefacts.** Scanlines, a drifting refresh band, a faint flicker and an occasional
+  one-pixel slip of the horizontal hold. All CSS.
+- **Working controls.** The brightness and contrast knobs turn (drag, mouse wheel, arrow keys,
+  double-click to centre), and the power switch collapses the picture into a dot; switching back on is a cold boot.
 - **Accessibility.** Animations stop under `prefers-reduced-motion`, output is an ARIA live log,
   the knobs are real sliders, and `crt off` gives a flat, effect-free panel. The distortion is
   skipped on Safari and phones, where it would misbehave.

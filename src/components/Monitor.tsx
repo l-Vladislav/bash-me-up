@@ -33,7 +33,7 @@ interface MonitorProps {
 const classNames = (...names: (string | false | undefined)[]): string =>
   names.filter(Boolean).join(' ');
 
-/** A monochrome video terminal on a desk: plastic case, curved glass, glowing phosphor. */
+/** A monochrome video terminal: plastic case, curved glass, glowing phosphor. */
 export function Monitor({
   model,
   settings,
@@ -60,10 +60,6 @@ export function Monitor({
       <div className={styles.wallGlow} />
 
       <div className={styles.stage}>
-        <div className={styles.desk}>
-          <div className={styles.deskGlow} />
-        </div>
-
         <div className={styles.case}>
           <div className={styles.vents} />
           <div className={styles.well}>
@@ -81,7 +77,6 @@ export function Monitor({
               <div className={styles.scanlines} />
               <div className={styles.refresh} />
               <div className={styles.flicker} />
-              <div className={styles.softness} />
               {!powered && <div className={styles.dot} />}
               <div className={styles.glass} />
             </div>
@@ -110,8 +105,6 @@ export function Monitor({
             />
           </footer>
         </div>
-
-        <div className={styles.foot} />
       </div>
 
       {bend && (

@@ -19,7 +19,11 @@
     inset 0 1px 1px rgb(255 255 255 / 0.2),
     0 2px 3px rgb(0 0 0 / 0.55),
     0 0 0 2px rgb(0 0 0 / 0.16);
-  cursor: ns-resize;
+  /* Two arrows chasing each other: "this turns". */
+  cursor:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cg stroke='%2312110d' stroke-width='5'%3E%3Cpath d='M6.2 9.5A9 9 0 0 1 22.6 11.5M21.8 18.5A9 9 0 0 1 5.4 16.5'/%3E%3Cpath d='M23.5 6.5v5.5H18M4.5 21.5V16H10'/%3E%3C/g%3E%3Cg stroke='%23f3ecd6' stroke-width='2.2'%3E%3Cpath d='M6.2 9.5A9 9 0 0 1 22.6 11.5M21.8 18.5A9 9 0 0 1 5.4 16.5'/%3E%3Cpath d='M23.5 6.5v5.5H18M4.5 21.5V16H10'/%3E%3C/g%3E%3C/svg%3E")
+      14 14,
+    ns-resize;
   touch-action: none;
 }
 

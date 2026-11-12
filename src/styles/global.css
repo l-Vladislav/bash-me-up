@@ -3,14 +3,12 @@
 
   /* The one colour a monochrome tube can show; everything else derives from it. */
   --phosphor: #ffb000;
-  --phosphor-dim: color-mix(in oklab, var(--phosphor) 60%, black);
+  --phosphor-dim: color-mix(in oklab, var(--phosphor) 70%, black);
   --phosphor-bright: color-mix(in oklab, var(--phosphor) 72%, white);
   --screen-black: #050505;
 
-  /* Bloom of the phosphor around lit pixels. */
-  --glow:
-    0 0 1px color-mix(in srgb, var(--phosphor) 80%, transparent),
-    0 0 9px color-mix(in srgb, var(--phosphor) 55%, transparent);
+  /* Bloom of the phosphor around lit pixels: wide and faint, so glyph edges stay crisp. */
+  --glow: 0 0 10px color-mix(in srgb, var(--phosphor) 38%, transparent);
   --glow-box: 0 0 10px color-mix(in srgb, var(--phosphor) 55%, transparent);
 
   --font-terminal: 'VT323', ui-monospace, 'Cascadia Mono', Consolas, monospace;

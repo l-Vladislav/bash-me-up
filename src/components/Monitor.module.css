@@ -7,7 +7,7 @@
   place-items: center;
   height: 100dvh;
   overflow: hidden;
-  padding: clamp(8px, 2.2vmin, 28px) clamp(8px, 2.2vmin, 28px) clamp(26px, 7vh, 72px);
+  padding: clamp(8px, 2.2vmin, 28px);
   background: radial-gradient(ellipse 90% 70% at 50% 35%, #1a1713 0%, #0b0907 60%, #050404 100%);
 }
 
@@ -26,55 +26,11 @@
 }
 
 .stage {
-  --desk-overlap: 10px;
-
   position: relative;
-  isolation: isolate;
   display: flex;
   flex-direction: column;
   width: min(100%, 1240px);
-  height: min(100%, 940px);
-}
-
-/* ---- Desk ---------------------------------------------------------------- */
-
-.desk {
-  position: absolute;
-  z-index: -1;
-  top: calc(100% - var(--desk-overlap));
-  left: 50%;
-  width: 100vw;
-  height: 100vh;
-  translate: -50% 0;
-  background:
-    linear-gradient(to bottom, rgb(255 255 255 / 0.1) 0, transparent 2px),
-    repeating-linear-gradient(to bottom, rgb(0 0 0 / 0.1) 0 1px, transparent 1px 9px),
-    linear-gradient(to bottom, #2f2218 0, #21170f 40px, #130d08 200px);
-}
-
-/* The screen's light pooling on the desk in front of the monitor. */
-.deskGlow {
-  position: absolute;
-  inset: 0 0 auto;
-  height: 180px;
-  background: radial-gradient(
-    ellipse 42% 100% at 50% 0%,
-    color-mix(in srgb, var(--phosphor) 38%, transparent),
-    transparent 75%
-  );
-  transition: opacity 0.7s;
-}
-
-.foot {
-  flex: none;
-  align-self: center;
-  width: 56%;
-  height: clamp(10px, 1.8vh, 16px);
-  border-radius: 0 0 8px 8px;
-  background: linear-gradient(#7d7663, #5f594a);
-  box-shadow:
-    inset 0 3px 5px rgb(0 0 0 / 0.55),
-    0 12px 24px 8px rgb(0 0 0 / 0.6);
+  height: min(100%, 900px);
 }
 
 /* ---- Plastic case -------------------------------------------------------- */
@@ -175,7 +131,6 @@
 .scanlines,
 .refresh,
 .flicker,
-.softness,
 .glass {
   position: absolute;
   inset: 0;
@@ -184,7 +139,6 @@
 .scanlines,
 .refresh,
 .flicker,
-.softness,
 .glass {
   pointer-events: none;
 }
@@ -219,7 +173,7 @@
 }
 
 .scanlines {
-  background: repeating-linear-gradient(to bottom, transparent 0 2px, rgb(0 0 0 / 0.3) 2px 3px);
+  background: repeating-linear-gradient(to bottom, transparent 0 2px, rgb(0 0 0 / 0.16) 2px 3px);
 }
 
 /* The faint band of a refresh cycle drifting down the screen. */
@@ -239,12 +193,6 @@
   background: var(--phosphor);
   opacity: 0.012;
   animation: flicker 0.2s steps(2) infinite;
-}
-
-/* The beam loses focus towards the corners. */
-.softness {
-  backdrop-filter: blur(0.7px);
-  mask-image: radial-gradient(ellipse at center, transparent 58%, #000 100%);
 }
 
 /* The afterimage left in the middle of the tube when power is cut. */
@@ -271,7 +219,7 @@
       transparent 70%
     ),
     radial-gradient(ellipse 40% 26% at 20% 9%, rgb(255 255 255 / 0.07), transparent 70%),
-    radial-gradient(ellipse at center, transparent 52%, rgb(0 0 0 / 0.6) 100%);
+    radial-gradient(ellipse at center, transparent 58%, rgb(0 0 0 / 0.5) 100%);
   box-shadow:
     inset 0 0 clamp(20px, 5vmin, 70px) rgb(0 0 0 / 0.85),
     inset 0 0 2px 1px rgb(255 255 255 / 0.07);
@@ -349,10 +297,8 @@
   animation: none;
 }
 
-.off .deskGlow,
 .off .refresh,
-.off .flicker,
-.off .softness {
+.off .flicker {
   opacity: 0;
 }
 
@@ -374,7 +320,6 @@
 .flat .scanlines,
 .flat .refresh,
 .flat .flicker,
-.flat .softness,
 .flat .glass {
   display: none;
 }
@@ -486,8 +431,6 @@
   }
 
   .wallGlow,
-  .desk,
-  .foot,
   .vents,
   .nameplate {
     display: none;

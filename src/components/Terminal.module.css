@@ -2,7 +2,7 @@
   position: relative;
   height: 100%;
   font-family: var(--font-terminal);
-  font-size: clamp(1.0625rem, 0.7vw + 0.75rem, 1.5rem);
+  font-size: clamp(1.125rem, 0.8vw + 0.8rem, 1.625rem);
   line-height: 1.15;
   color: var(--phosphor);
   text-shadow: var(--glow);
