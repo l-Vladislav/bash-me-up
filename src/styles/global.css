@@ -1,0 +1,36 @@
+:root {
+  color-scheme: dark;
+
+  /* The one colour a monochrome tube can show; everything else derives from it. */
+  --phosphor: #ffb000;
+  --phosphor-dim: color-mix(in oklab, var(--phosphor) 60%, black);
+  --phosphor-bright: color-mix(in oklab, var(--phosphor) 72%, white);
+  --screen-black: #050505;
+
+  /* Bloom of the phosphor around lit pixels. */
+  --glow:
+    0 0 1px color-mix(in srgb, var(--phosphor) 80%, transparent),
+    0 0 9px color-mix(in srgb, var(--phosphor) 55%, transparent);
+  --glow-box: 0 0 10px color-mix(in srgb, var(--phosphor) 55%, transparent);
+
+  --font-terminal: 'VT323', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  --font-label: ui-sans-serif, system-ui, 'Segoe UI', Helvetica, Arial, sans-serif;
+}
+
+:root[data-phosphor='green'] {
+  --phosphor: #41ff6a;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: #050404;
+}

@@ -1,0 +1,117 @@
+.terminal {
+  container-type: inline-size;
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: clamp(18px, 4.5%, 52px) clamp(18px, 5.5%, 72px);
+  font-family: var(--font-terminal);
+  font-size: clamp(1.0625rem, 0.7vw + 0.75rem, 1.5rem);
+  line-height: 1.15;
+  color: var(--phosphor);
+  text-shadow: var(--glow);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  cursor: text;
+}
+
+.terminal ::selection {
+  background: var(--phosphor);
+  color: var(--screen-black);
+  text-shadow: none;
+}
+
+.line {
+  min-height: 1lh;
+}
+
+/* 54 columns of banner must fit: one VT323 glyph is 0.4em wide. */
+.art {
+  font-size: min(1em, 4.4cqw);
+  white-space: pre;
+  overflow: hidden;
+}
+
+.normal {
+  color: inherit;
+}
+
+.dim {
+  color: var(--phosphor-dim);
+}
+
+.bright {
+  color: var(--phosphor-bright);
+}
+
+.inverse {
+  background: var(--phosphor);
+  color: var(--screen-black);
+  text-shadow: none;
+  box-shadow: var(--glow-box);
+}
+
+.interactive {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-shadow: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  cursor: pointer;
+}
+
+.interactive:hover,
+.interactive:focus-visible {
+  outline: none;
+  background: var(--phosphor);
+  color: var(--screen-black);
+  text-shadow: none;
+}
+
+.prompt {
+  position: relative;
+  display: block;
+  min-height: 1lh;
+}
+
+.cursor {
+  outline: 1px solid var(--phosphor);
+  outline-offset: -1px;
+}
+
+.prompt:focus-within .cursor {
+  outline: none;
+  background: var(--phosphor);
+  color: var(--screen-black);
+  text-shadow: none;
+  box-shadow: var(--glow-box);
+  animation: blink 1.1s steps(1) infinite;
+}
+
+/* Invisible but focusable; 16px keeps iOS from zooming in on focus. */
+.input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  font-size: 16px;
+  cursor: text;
+}
+
+@keyframes blink {
+  50% {
+    background: transparent;
+    color: inherit;
+    box-shadow: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prompt:focus-within .cursor {
+    animation: none;
+  }
+}

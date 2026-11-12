@@ -1,0 +1,214 @@
+.room {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  place-items: center;
+  height: 100dvh;
+  padding: clamp(8px, 2.2vmin, 28px);
+  background: radial-gradient(ellipse at 50% 20%, #24201a 0%, #0c0a08 55%, #050404 100%);
+}
+
+/* ---- Plastic case ------------------------------------------------------- */
+
+.case {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 1240px);
+  height: min(100%, 900px);
+  padding: clamp(12px, 2.6vmin, 34px) clamp(12px, 2.6vmin, 34px) 0;
+  border-radius: clamp(14px, 2.4vmin, 30px);
+  background: linear-gradient(175deg, #d8d1bc 0%, #c4bca5 45%, #a8a08a 100%);
+  box-shadow:
+    inset 0 2px 1px rgb(255 255 255 / 0.55),
+    inset 0 -6px 10px rgb(0 0 0 / 0.28),
+    0 30px 70px rgb(0 0 0 / 0.75);
+}
+
+/* The dark recess the tube sits in. */
+.well {
+  flex: 1;
+  min-height: 0;
+  padding: clamp(6px, 1.3vmin, 16px);
+  border-radius: clamp(14px, 3vmin, 34px);
+  background: linear-gradient(#17150f, #2b2820);
+  box-shadow:
+    inset 0 6px 14px rgb(0 0 0 / 0.9),
+    0 1px 0 rgb(255 255 255 / 0.4);
+}
+
+/* ---- Tube --------------------------------------------------------------- */
+
+.screen {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  isolation: isolate;
+  border-radius: 3.5% / 5.5%;
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in oklab, var(--phosphor) 9%, var(--screen-black)) 0%,
+    var(--screen-black) 85%
+  );
+}
+
+.image,
+.scanlines,
+.refresh,
+.flicker,
+.glass {
+  position: absolute;
+  inset: 0;
+}
+
+.scanlines,
+.refresh,
+.flicker,
+.glass {
+  pointer-events: none;
+}
+
+/* Collapses to a bright line and unfolds, like a tube warming up. */
+.beam {
+  height: 100%;
+  animation: power-on 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.scanlines {
+  background: repeating-linear-gradient(to bottom, transparent 0 2px, rgb(0 0 0 / 0.3) 2px 3px);
+}
+
+/* The faint band of a refresh cycle drifting down the screen. */
+.refresh {
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    color-mix(in srgb, var(--phosphor) 5%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 100% 22%;
+  background-repeat: no-repeat;
+  animation: refresh 7s linear infinite;
+}
+
+.flicker {
+  background: var(--phosphor);
+  opacity: 0.015;
+  animation: flicker 0.13s steps(2) infinite;
+}
+
+/* Vignette of the curved glass plus a soft reflection of the room. */
+.glass {
+  background:
+    radial-gradient(ellipse 70% 45% at 28% -5%, rgb(255 255 255 / 0.09), transparent 70%),
+    radial-gradient(ellipse at center, transparent 55%, rgb(0 0 0 / 0.6) 100%);
+  box-shadow: inset 0 0 clamp(20px, 5vmin, 70px) rgb(0 0 0 / 0.85);
+  border-radius: inherit;
+}
+
+/* ---- CRT simulation off: a plain flat panel ----------------------------- */
+
+.flat .scanlines,
+.flat .refresh,
+.flat .flicker,
+.flat .glass {
+  display: none;
+}
+
+.flat .screen {
+  --glow: none;
+  --glow-box: none;
+  border-radius: 6px;
+}
+
+/* ---- Front panel -------------------------------------------------------- */
+
+.panel {
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 2vw, 24px);
+  min-width: 0;
+  min-height: clamp(52px, 9vmin, 76px);
+  padding: 0 clamp(2px, 1vw, 12px);
+}
+
+.badge {
+  flex: none;
+  padding: 3px 9px;
+  border-radius: 3px;
+  background: #2b2820;
+  color: #d8d1bc;
+  font: 700 0.6875rem/1.4 var(--font-label);
+  letter-spacing: 0.18em;
+  box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.6);
+}
+
+.led {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  margin-left: auto;
+  border-radius: 50%;
+  background: var(--phosphor);
+  box-shadow:
+    0 0 2px 1px rgb(0 0 0 / 0.5),
+    0 0 9px 2px color-mix(in srgb, var(--phosphor) 70%, transparent);
+}
+
+.filters {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+@keyframes power-on {
+  0% {
+    transform: scale(1, 0.004);
+    opacity: 0;
+  }
+  35% {
+    transform: scale(1, 0.004);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1, 1);
+    opacity: 1;
+  }
+}
+
+@keyframes refresh {
+  from {
+    background-position: 0 -30%;
+  }
+  to {
+    background-position: 0 130%;
+  }
+}
+
+@keyframes flicker {
+  50% {
+    opacity: 0.032;
+  }
+}
+
+@media (max-width: 719px) {
+  .room {
+    padding: 0;
+  }
+
+  .case {
+    height: 100%;
+    border-radius: 0;
+    padding: 8px 8px 0;
+  }
+
+  .badge {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .beam,
+  .refresh,
+  .flicker {
+    animation: none;
+  }
+}
