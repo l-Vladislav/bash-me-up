@@ -30,41 +30,23 @@ the monitor's front panel if you would rather not type.
 ```
 guest@larionov:~$ help
 
-portfolio
-  about                    Who I am and what I do
-  experience [1-3]         Work history; pass a number for details
-  skills                   Technologies I work with
-  projects [1-5]           Things I have built; pass a number for details
-  education                Degree
-  contact                  How to reach me
+  portfolio   About me, experience, skills, projects, contacts
+  games       Moon landing, hangman, tic-tac-toe, guess the number
+  tools       Calculator, calendar, Morse code, big letters and more
+  terminal    Colour, CRT effect, history, clear, reboot
 
-games
-  lander                   Land on the Moon in one piece
-  hangman                  Guess the word before the drawing is done
-  tictactoe                Noughts and crosses against the machine
-  guess                    Guess the number I am thinking of
+guest@larionov:~$ games
 
-tools
-  calc <expression>        Evaluate arithmetic, e.g. calc 2^10 / 4
-  banner <text>            Print text in big letters
-  morse <text|code>        Encode text as Morse code, or decode it
-  fortune                  An aphorism from the machine room
-  cal [month] [year]       Show a calendar
-  date                     Print the date and time
-  uptime                   How long the terminal has been on
-  uname [-a]               Print system information
-  echo <text>              Print the arguments
+  lander      Land on the Moon in one piece
+  hangman     Guess the word before the drawing is done
+  tictactoe   Noughts and crosses against the machine
+  guess       Guess the number I am thinking of
 
-terminal
-  help                     Show this list
-  man <command>            Manual page for a command
-  theme [amber|green]      Swap the phosphor colour
-  crt [on|off]             Toggle the CRT simulation
-  history                  Commands typed this session
-  clear                    Clear the screen (Ctrl+L)
-  reboot                   Restart the terminal
+  < all sections
 ```
 
+- `help` lists sections; open one with `help <section>` or just its name (`games`, `tools`).
+  `help <command>` works like `man`.
 - **Tab** completes commands and arguments, **Up/Down** recall history.
 - Every highlighted word on screen is clickable, so the site works without a keyboard.
 - `ls` and `cat about.txt` work too, for visitors with shell habits.

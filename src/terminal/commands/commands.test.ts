@@ -46,12 +46,32 @@ describe('execute', () => {
 });
 
 describe('help', () => {
-  it('lists public commands and omits hidden ones', () => {
-    const text = output('help');
+  const sections = ['portfolio', 'games', 'tools', 'terminal'];
+
+  it('fits on one screen: sections only, each a clickable row', () => {
+    const lines = execute('help', context).lines;
+    expect(lines.length).toBeLessThan(12);
+    expect(lines.flatMap((line) => line.command ?? [])).toEqual(
+      sections.map((section) => `help ${section}`),
+    );
+  });
+
+  it('lists every public command in exactly one section, and no hidden ones', () => {
+    const pages = sections.map((section) => output(`help ${section}`));
     for (const command of commands) {
-      const listed = text.includes(`  ${command.name}`);
-      expect(listed, command.name).toBe(!command.hidden);
+      const listedIn = pages.filter((page) => page.includes(`  ${command.name} `)).length;
+      expect(listedIn, command.name).toBe(command.hidden ? 0 : 1);
     }
+  });
+
+  it('opens a section by its own name too', () => {
+    expect(output('games')).toBe(output('help games'));
+    expect(output('TOOLS')).toBe(output('help tools'));
+  });
+
+  it('explains a command, or points at the sections', () => {
+    expect(output('help calc')).toBe(output('man calc'));
+    expect(output('help nope')).toContain('no section "nope"');
   });
 });
 
