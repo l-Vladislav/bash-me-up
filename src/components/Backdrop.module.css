@@ -13,9 +13,11 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: max(100cqw, 177.6cqh);
+  /* A little larger than the viewport, so the parallax never shows an edge. */
+  width: calc(max(100cqw, 177.6cqh) * 1.06);
   aspect-ratio: 1280 / 721;
-  translate: -50% -50%;
+  translate: calc(-50% + var(--pan-x, 0) * -2%) calc(-50% + var(--pan-y, 0) * -2%);
+  transition: translate 0.8s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
 
 /* Out of focus and dimmed: the room should never compete with the screen. */
@@ -160,5 +162,9 @@
 @media (prefers-reduced-motion: reduce) {
   .lamp {
     display: none;
+  }
+
+  .photo {
+    translate: -50% -50%;
   }
 }

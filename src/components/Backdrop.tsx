@@ -1,4 +1,5 @@
-import type { CSSProperties } from 'react';
+import { useEffect, useRef } from 'react';
+import type { CSSProperties, RefObject } from 'react';
 import styles from './Backdrop.module.css';
 
 /** How an indicator lamp behaves; each maps to a keyframe animation. */
@@ -77,13 +78,45 @@ const lampStyle = ({ x, y, pattern, size = 2.2 }: Lamp, index: number): CSSPrope
 };
 
 /**
+ * Parallax: publishes the pointer position as `--pan-x` / `--pan-y` (-1..1 from
+ * the centre of the window) on the element, at most once per frame. Written
+ * straight to the style, so moving the mouse never re-renders React.
+ */
+function usePointerPan(ref: RefObject<HTMLElement | null>): void {
+  useEffect(() => {
+    const element = ref.current;
+    if (!element || !matchMedia('(pointer: fine)').matches) return;
+
+    let frame = 0;
+    const onMove = (event: PointerEvent): void => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const x = (event.clientX / innerWidth) * 2 - 1;
+        const y = (event.clientY / innerHeight) * 2 - 1;
+        element.style.setProperty('--pan-x', x.toFixed(3));
+        element.style.setProperty('--pan-y', y.toFixed(3));
+      });
+    };
+
+    addEventListener('pointermove', onMove, { passive: true });
+    return () => {
+      removeEventListener('pointermove', onMove);
+      cancelAnimationFrame(frame);
+    };
+  }, [ref]);
+}
+
+/**
  * The room behind the terminal: a defocused photo of old equipment whose
  * indicator lamps keep blinking. Each lamp is a glow over a highlight in the
  * photo; fading the glow in and out makes the lamp flare up and settle.
  */
 export function Backdrop() {
+  const ref = useRef<HTMLDivElement>(null);
+  usePointerPan(ref);
+
   return (
-    <div className={styles.backdrop} aria-hidden="true">
+    <div ref={ref} className={styles.backdrop} aria-hidden="true">
       <div className={styles.photo}>
         {LAMPS.map((lamp, index) => (
           <span
