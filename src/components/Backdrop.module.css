@@ -31,7 +31,7 @@
   );
 }
 
-/* ---- Indicator lamps: a shade that switches a highlight off -------------- */
+/* ---- Indicator lamps: a glow that flares a highlight up ------------------ */
 
 .lamp {
   position: absolute;
@@ -41,12 +41,15 @@
   aspect-ratio: 1;
   translate: -50% -50%;
   border-radius: 50%;
+  /* Colour dodge brightens whatever is underneath in its own hue, so one
+     neutral glow works for amber, red and green lamps alike. */
   background: radial-gradient(
     closest-side,
-    rgb(10 7 5 / 0.92) 0%,
-    rgb(10 7 5 / 0.7) 55%,
+    rgb(200 200 200) 0%,
+    rgb(150 150 150 / 0.6) 50%,
     transparent 100%
   );
+  mix-blend-mode: color-dodge;
   opacity: 0;
   animation-iteration-count: infinite;
 }

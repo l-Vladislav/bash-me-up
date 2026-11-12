@@ -78,8 +78,8 @@ const lampStyle = ({ x, y, pattern, size = 2.2 }: Lamp, index: number): CSSPrope
 
 /**
  * The room behind the terminal: a defocused photo of old equipment whose
- * indicator lamps keep blinking. Each lamp is a dark shade over a highlight in
- * the photo; fading the shade in and out switches the lamp off and on.
+ * indicator lamps keep blinking. Each lamp is a glow over a highlight in the
+ * photo; fading the glow in and out makes the lamp flare up and settle.
  */
 export function Backdrop() {
   return (
