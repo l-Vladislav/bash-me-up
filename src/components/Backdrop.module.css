@@ -1,0 +1,161 @@
+/* ---- The room behind the monitor ----------------------------------------- */
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  container-type: size;
+}
+
+/* Covers the viewport like `background-size: cover`, but as a box of its own,
+   so the lamps can be placed in percent of the photo. */
+.photo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100cqw, 177.6cqh);
+  aspect-ratio: 1280 / 721;
+  translate: -50% -50%;
+}
+
+/* Out of focus and dimmed: the room should never compete with the screen. */
+.photo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 75% 80% at 50% 45%,
+    rgb(5 4 4 / 0.45) 0%,
+    rgb(5 4 4 / 0.55) 60%,
+    rgb(5 4 4 / 0.85) 100%
+  );
+}
+
+/* ---- Indicator lamps: a shade that switches a highlight off -------------- */
+
+.lamp {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--size);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgb(10 7 5 / 0.92) 0%,
+    rgb(10 7 5 / 0.7) 55%,
+    transparent 100%
+  );
+  opacity: 0;
+  animation-iteration-count: infinite;
+}
+
+.blink {
+  animation-name: blink;
+  animation-timing-function: ease-in-out;
+}
+
+.activity {
+  animation-name: activity;
+  animation-timing-function: step-end;
+}
+
+.pulse {
+  animation-name: pulse;
+  animation-timing-function: ease-in-out;
+  animation-direction: alternate;
+}
+
+.meter {
+  aspect-ratio: 2 / 1;
+  animation-name: meter;
+  animation-timing-function: ease-in-out;
+}
+
+@keyframes blink {
+  0%,
+  44% {
+    opacity: 0;
+  }
+  50%,
+  94% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Disk and bus activity: irregular bursts. */
+@keyframes activity {
+  0% {
+    opacity: 1;
+  }
+  4% {
+    opacity: 0;
+  }
+  31% {
+    opacity: 1;
+  }
+  34% {
+    opacity: 0;
+  }
+  37% {
+    opacity: 1;
+  }
+  40% {
+    opacity: 0;
+  }
+  68% {
+    opacity: 1;
+  }
+  74% {
+    opacity: 0;
+  }
+}
+
+@keyframes pulse {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 0.75;
+  }
+}
+
+/* VU meters: the backlight wavers with the signal. */
+@keyframes meter {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.35;
+  }
+  45% {
+    opacity: 0.1;
+  }
+  70% {
+    opacity: 0.45;
+  }
+}
+
+/* The monitor fills small screens, so the room is never seen or downloaded. */
+@media (max-width: 719px) {
+  .backdrop {
+    display: none;
+  }
+}
+
+@media (min-width: 720px) {
+  .photo {
+    background: url('../assets/server-room.webp') center / 100% 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lamp {
+    display: none;
+  }
+}

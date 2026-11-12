@@ -4,6 +4,7 @@ import { createBarrelMap, displacementScale, supportsBarrel } from '../crt/barre
 import { useElementSize } from '../hooks/useElementSize';
 import type { UpdateSettings } from '../hooks/useSettings';
 import type { Settings } from '../terminal/settings';
+import { Backdrop } from './Backdrop';
 import { Knob } from './Knob';
 import styles from './Monitor.module.css';
 import { PowerSwitch } from './PowerSwitch';
@@ -57,6 +58,7 @@ export function Monitor({
 
   return (
     <main className={classNames(styles.room, !powered && styles.off, !settings.crt && styles.flat)}>
+      <Backdrop />
       <div className={styles.wallGlow} />
 
       <div className={styles.stage}>
