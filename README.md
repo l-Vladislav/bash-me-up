@@ -21,15 +21,6 @@
 
 </div>
 
-![Amber phosphor: the about screen](docs/amber.png)
-
-<details>
-<summary>Green phosphor</summary>
-
-![Green phosphor: the experience list](docs/green.png)
-
-</details>
-
 ## What it is
 
 The personal site of [Vladislav Larionov](https://www.linkedin.com/in/vladislav-larionov), a senior
