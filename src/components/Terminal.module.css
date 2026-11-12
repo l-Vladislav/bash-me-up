@@ -43,6 +43,33 @@
   animation: none;
 }
 
+/* Table rows never wrap; cells drop out on narrow screens instead. */
+.nowrap {
+  overflow: hidden;
+  white-space: pre;
+  text-overflow: ellipsis;
+}
+
+.row {
+  cursor: pointer;
+}
+
+.row:hover {
+  background: color-mix(in srgb, var(--phosphor) 14%, transparent);
+}
+
+@container (max-width: 46rem) {
+  .hideBelowWide {
+    display: none;
+  }
+}
+
+@container (max-width: 30rem) {
+  .hideBelowMedium {
+    display: none;
+  }
+}
+
 /* 54 columns of banner must fit: one VT323 glyph is 0.4em wide. */
 .art {
   font-size: min(1em, 4.4cqw);

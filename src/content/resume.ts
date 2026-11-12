@@ -50,8 +50,14 @@ export interface SkillGroup {
 
 export interface Project {
   name: string;
+  /** Short context shown in the project table, e.g. the company. */
   tagline: string;
+  /** What I did on the project. */
+  role?: string;
   description: string;
+  /** Bullet points on the project's own page. */
+  highlights?: readonly string[];
+  /** The first few entries are previewed in the project table. */
   stack: readonly string[];
   href?: string;
 }

@@ -34,7 +34,7 @@ guest@larionov:~$ help
   about                 Who I am and what I do
   experience [1-3]      Work history; pass a number for details
   skills                Technologies I work with
-  projects              Things I have built
+  projects [1-5]        Things I have built; pass a number for details
   education             Degree
   contact               How to reach me
   theme [amber|green]   Swap the phosphor colour
@@ -79,6 +79,21 @@ All text lives outside the code, in two files:
 | -------------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | [`content/portfolio.json`](content/portfolio.json) | Profile, experience, skills, projects, education, contacts, boot messages, front-panel keys |
 | [`content/banner.txt`](content/banner.txt)         | The ASCII banner on the welcome screen                                                      |
+
+Adding a project is one more object in the `projects` array; it shows up in the table and gets its
+own page (`projects <n>`) automatically:
+
+```jsonc
+{
+  "name": "Project name", // table row and page title
+  "tagline": "Company, 2026", // the WHERE column
+  "role": "What I did", // optional
+  "description": "One or two sentences.",
+  "highlights": ["Result one.", "Result two."], // optional bullet points
+  "stack": ["React", "TypeScript"], // first three are previewed in the table
+  "href": "https://github.com/...", // optional link
+}
+```
 
 Edit, commit, push: the site redeploys itself. The JSON is checked against the `Portfolio` type in
 [`src/content/resume.ts`](src/content/resume.ts), so a missing or misspelled field fails the build

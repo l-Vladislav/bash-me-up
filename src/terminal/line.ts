@@ -12,6 +12,8 @@ export interface Span {
   href?: string;
   /** Renders the span as a button that runs this command when activated. */
   command?: string;
+  /** Table cell that is dropped when the screen is narrower than this. */
+  hideBelow?: 'medium' | 'wide';
 }
 
 export interface Line {
@@ -20,6 +22,10 @@ export interface Line {
   hang?: number;
   /** Milliseconds to wait before this line is printed. */
   delay?: number;
+  /** Table row: stays on one line instead of wrapping. */
+  nowrap?: boolean;
+  /** Makes the whole row clickable; clicking it runs this command. */
+  command?: string;
   /** Form feed: wipes the screen before this line is printed. */
   clear?: boolean;
   /** Preformatted ASCII art: never wraps, shrinks to fit narrow screens. */

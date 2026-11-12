@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { contact, experience, profile } from '../../content/resume';
+import { contact, experience, profile, projects } from '../../content/resume';
 import { toPlainText } from '../line';
 import { DEFAULT_SETTINGS } from '../settings';
 import { commands, execute, tokenize } from './index';
@@ -64,6 +64,26 @@ describe('content commands', () => {
 
   it('experience rejects an out-of-range entry', () => {
     expect(output('experience 99')).toContain('no entry "99"');
+  });
+
+  it('projects lists every project as a clickable row and opens one by number', () => {
+    const table = execute('projects', context).lines;
+    const rowCommands = table.flatMap((line) => line.command ?? []);
+    expect(rowCommands).toEqual(projects.map((_, index) => `projects ${index + 1}`));
+
+    const text = table.map(toPlainText).join('\n');
+    for (const project of projects) expect(text).toContain(project.name);
+
+    const first = projects[0];
+    expect(output('projects 1')).toContain(first?.description);
+    expect(output('projects 0')).toContain('no entry "0"');
+  });
+
+  it('the last project links back to the first', () => {
+    const commands = execute(`projects ${projects.length}`, context).lines.flatMap((line) =>
+      line.spans.flatMap((span) => span.command ?? []),
+    );
+    expect(commands).toEqual(['projects', 'projects 1']);
   });
 
   it('contact exposes every link as a real href', () => {

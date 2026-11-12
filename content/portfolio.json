@@ -10,14 +10,25 @@
       "Hands-on with AI-assisted development and LLM / RAG / MCP integrations."
     ],
     "stats": [
-      { "value": "10+", "label": "years in product development" },
-      { "value": "4+", "label": "years leading a team of 5" },
-      { "value": "+30%", "label": "render performance after the Angular 17 migration" },
-      { "value": "-50%", "label": "build time after the same migration" }
+      {
+        "value": "10+",
+        "label": "years in product development"
+      },
+      {
+        "value": "4+",
+        "label": "years leading a team of 5"
+      },
+      {
+        "value": "+30%",
+        "label": "render performance after the Angular 17 migration"
+      },
+      {
+        "value": "-50%",
+        "label": "build time after the same migration"
+      }
     ],
     "languages": ["Russian (native)", "English (C1)", "Hebrew (basic)"]
   },
-
   "contact": {
     "note": "The fastest way to reach me is email.",
     "links": [
@@ -38,7 +49,6 @@
       }
     ]
   },
-
   "experience": [
     {
       "title": "Senior Full-Stack Engineer",
@@ -114,64 +124,108 @@
       "stack": ["Angular", "TypeScript", "C#", "ColdFusion", "MSSQL"]
     }
   ],
-
   "skills": [
     {
       "name": "Frontend",
       "items": ["Angular", "React", "Next.js", "TypeScript", "RxJS/NgRx", "Three.js"]
     },
-    { "name": "Backend", "items": ["Python (Django)", "C#/.NET (ASP.NET Core)", "Node.js"] },
-    { "name": "Data", "items": ["PostgreSQL", "MSSQL", "MySQL", "Redis"] },
-    { "name": "Cloud", "items": ["AWS (Terraform)", "Azure", "Docker", "CI/CD"] },
-    { "name": "Quality", "items": ["REST APIs", "Microservices", "Jest", "Cypress", "Git"] },
-    { "name": "AI", "items": ["LLM integrations", "RAG", "MCP", "AI agents", "Claude Code"] },
+    {
+      "name": "Backend",
+      "items": ["Python (Django)", "C#/.NET (ASP.NET Core)", "Node.js"]
+    },
+    {
+      "name": "Data",
+      "items": ["PostgreSQL", "MSSQL", "MySQL", "Redis"]
+    },
+    {
+      "name": "Cloud",
+      "items": ["AWS (Terraform)", "Azure", "Docker", "CI/CD"]
+    },
+    {
+      "name": "Quality",
+      "items": ["REST APIs", "Microservices", "Jest", "Cypress", "Git"]
+    },
+    {
+      "name": "AI",
+      "items": ["LLM integrations", "RAG", "MCP", "AI agents", "Claude Code"]
+    },
     {
       "name": "Leadership",
       "items": ["Agile", "Team leadership", "Project planning", "Mentoring"]
     }
   ],
-
   "projects": [
     {
       "name": "GovTech mobile MVP",
       "tagline": "My Muni, 2025",
+      "role": "Senior full-stack engineer, one of 3 engineers",
       "description": "Web and mobile app for a GovTech startup, shipped to a pilot in 6 months by a team of 3: push notifications, interactive 3D maps, AWS infrastructure as code.",
+      "highlights": [
+        "Took the product from zero to a pilot with test users in 6 months.",
+        "Built push notifications end to end: backend triggers, native delivery (incl. FCM), scalable front-end handling.",
+        "Developed interactive maps with custom themes and 3D objects for the mobile app.",
+        "Set up and maintained the AWS infrastructure with Terraform (Docker, Redis, PostgreSQL).",
+        "Designed an AI assistant architecture over internal data and services (RAG / MCP approaches)."
+      ],
       "stack": ["React", "Next.js", "Capacitor", "Django", "PostgreSQL", "AWS", "Terraform"]
     },
     {
       "name": "AngularJS to Angular 17 migration",
-      "tagline": "Yumasoft, team lead",
+      "tagline": "Yumasoft",
+      "role": "Team lead, team of 5",
       "description": "Phased migration of a large configuration-driven product with zero downtime and every client configuration preserved. +30% render performance, -50% build time.",
+      "highlights": [
+        "Migrated a large no-code, configuration-driven application in phases over 6 months.",
+        "Zero migration-related downtime; every client configuration preserved.",
+        "+30% render performance and -50% build time after the migration."
+      ],
       "stack": ["Angular 17", "TypeScript", "RxJS", "NgRx"]
     },
     {
       "name": "Real-time BI platform",
-      "tagline": "Yumasoft, design and delivery",
+      "tagline": "Yumasoft",
+      "role": "Design and delivery",
       "description": "Low-code dashboards with real-time reports and a queue-based export notification service. 1,000+ reports, ~300 external clients.",
+      "highlights": [
+        "Built or migrated 1,000+ reports from the legacy system.",
+        "Auto-filters halved report setup time: one report instead of two.",
+        "Used by ~100 people in 3 departments and ~300 external clients."
+      ],
       "stack": ["Angular", "TypeScript", "MSSQL", "Azure"]
     },
     {
       "name": "No-code A/B testing platform",
-      "tagline": "Yumasoft, design and delivery",
+      "tagline": "Yumasoft",
+      "role": "Design and delivery",
       "description": "Lets ~200 clients launch experiments without developers: ~1,000 concurrent experiments and a new paid subscription tier.",
+      "highlights": [
+        "Used by ~200 clients with ~10 campaigns each: ~1,000 concurrent experiments overall.",
+        "Removed the developer dependency for launching experiments, saving ~30 dev-hours a month.",
+        "Enabled a new paid subscription tier."
+      ],
       "stack": ["Angular", "TypeScript", "RxJS"]
     },
     {
       "name": "bash-me-up",
       "tagline": "this terminal",
+      "role": "Design and development",
       "description": "The portfolio you are looking at: a monochrome CRT terminal with real barrel distortion, built with React and TypeScript.",
+      "highlights": [
+        "Real barrel distortion through an SVG displacement map: no canvas, no WebGL, the text stays selectable.",
+        "Commands are pure functions that return data, so the whole shell is unit-tested without a DOM.",
+        "All content comes from one JSON file and is type-checked at build time.",
+        "Linted, tested and deployed to GitHub Pages by GitHub Actions on every push."
+      ],
       "stack": ["React", "TypeScript", "Vite", "SVG filters"],
       "href": "https://github.com/l-Vladislav/bash-me-up"
     }
   ],
-
   "education": [
     {
       "degree": "BSE in Software Engineering",
       "school": "Saint Petersburg State University of Aerospace Instrumentation"
     }
   ],
-
   "terminal": {
     "model": "VL-42",
     "title": "VL-42 VIDEO DISPLAY TERMINAL",
@@ -179,10 +233,22 @@
     "user": "guest",
     "host": "larionov",
     "bootChecks": [
-      { "label": "MEMORY TEST", "result": "640K OK" },
-      { "label": "KEYBOARD", "result": "OK" },
-      { "label": "CARRIER", "result": "CONNECT 2400" },
-      { "label": "LOADING PORTFOLIO", "result": "DONE" }
+      {
+        "label": "MEMORY TEST",
+        "result": "640K OK"
+      },
+      {
+        "label": "KEYBOARD",
+        "result": "OK"
+      },
+      {
+        "label": "CARRIER",
+        "result": "CONNECT 2400"
+      },
+      {
+        "label": "LOADING PORTFOLIO",
+        "result": "DONE"
+      }
     ],
     "quickKeys": ["help", "about", "experience", "skills", "projects", "contact", "theme"]
   }
