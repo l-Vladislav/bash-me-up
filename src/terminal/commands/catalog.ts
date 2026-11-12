@@ -102,16 +102,18 @@ export const catalogCommand = <T>(catalog: Catalog<T>): Command => {
         return { lines: [line(`${name}: no entry "${selector}" (expected ${range})`)] };
       }
 
+      // Navigation shares the title row, so a page costs no extra lines.
       const next = ((index + 1) % items.length) + 1;
-      return {
-        lines: [
-          heading(`${noun} ${index + 1}/${items.length}`),
-          blank(),
-          ...catalog.details(item),
-          blank(),
-          line(action(name, `< all ${name}`), '    ', action(`${name} ${next}`, `next ${noun} >`)),
+      const title: Line = {
+        spans: [
+          ...heading(`${noun} ${index + 1}/${items.length}`).spans,
+          { text: '   ' },
+          action(name, `< all ${name}`),
+          { text: '   ' },
+          action(`${name} ${next}`, `next ${noun} >`),
         ],
       };
+      return { lines: [title, blank(), ...catalog.details(item)] };
     },
   };
 };
