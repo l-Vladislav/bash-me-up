@@ -95,6 +95,20 @@ own page (`projects <n>`) automatically:
 }
 ```
 
+`experience` works the same way: a new object in the `experience` array becomes a row in the table
+and a page of its own (`experience <n>`):
+
+```jsonc
+{
+  "title": "Senior Full-Stack Engineer", // the ROLE column and page title
+  "company": "Company Inc.", // the COMPANY column
+  "location": "Israel",
+  "period": "01/2025 - present", // the PERIOD column
+  "highlights": ["What I did and what came of it."],
+  "stack": ["React", "Python"],
+}
+```
+
 Edit, commit, push: the site redeploys itself. The JSON is checked against the `Portfolio` type in
 [`src/content/resume.ts`](src/content/resume.ts), so a missing or misspelled field fails the build
 instead of reaching production.

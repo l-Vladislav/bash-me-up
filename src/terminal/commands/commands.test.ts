@@ -54,8 +54,12 @@ describe('content commands', () => {
     expect(output('about')).toContain(profile.name);
   });
 
-  it('experience lists every role and opens one by number', () => {
-    const list = output('experience');
+  it('experience lists every role as a clickable row and opens one by number', () => {
+    const table = execute('experience', context).lines;
+    const rowCommands = table.flatMap((line) => line.command ?? []);
+    expect(rowCommands).toEqual(experience.map((_, index) => `experience ${index + 1}`));
+
+    const list = table.map(toPlainText).join('\n');
     for (const role of experience) expect(list).toContain(role.company);
 
     const first = experience[0];
