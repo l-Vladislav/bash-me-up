@@ -1,13 +1,13 @@
 {
   "profile": {
     "name": "Vladislav Larionov",
-    "title": "Senior Full-Stack Engineer",
-    "focus": "Angular / React / C# / Python",
-    "location": "Israel",
+    "title": "Forward Deployed Engineer / Senior Full-Stack Engineer",
+    "focus": "TypeScript / Angular / React / C# / Python",
+    "location": "Israel (open to remote)",
     "summary": [
       "Senior full-stack engineer with 10+ years in product development and 4+ years leading a team of 5.",
-      "I led an AngularJS to Angular 17 migration with zero downtime, built a real-time BI platform used by ~300 external clients and a no-code A/B testing platform used by ~200 clients, and delivered a GovTech mobile MVP in 6 months.",
-      "Hands-on with AI-assisted development and LLM / RAG / MCP integrations."
+      "Hands-on engineer who works directly with clients: I gather requirements, design the solution, and deliver it end to end. 200+ clients onboarded through payment integrations, plus a real-time BI platform (~300 clients) and a no-code A/B testing platform (~200 clients).",
+      "I specialize in no-code solutions, high-performance reporting and notification services, and payment integrations."
     ],
     "stats": [
       {
@@ -17,6 +17,22 @@
       {
         "value": "4+",
         "label": "years leading a team of 5"
+      },
+      {
+        "value": "200+",
+        "label": "B2B clients onboarded through payment integrations"
+      },
+      {
+        "value": "~300",
+        "label": "B2B clients on the real-time BI platform I built"
+      },
+      {
+        "value": "~200",
+        "label": "B2B clients on the no-code A/B testing platform I built"
+      },
+      {
+        "value": "6 mo",
+        "label": "from zero to a GovTech mobile MVP with an LLM-powered help agent"
       },
       {
         "value": "+30%",
@@ -46,6 +62,11 @@
         "label": "github",
         "text": "github.com/l-Vladislav",
         "href": "https://github.com/l-Vladislav"
+      },
+      {
+        "label": "telegram",
+        "text": "@sunday_fork",
+        "href": "https://t.me/sunday_fork"
       }
     ]
   },
@@ -87,21 +108,23 @@
       "location": "St. Petersburg, Russia",
       "period": "06/2021 - 01/2025",
       "highlights": [
-        "Led a team of 5 developers; grew 4 juniors to senior level and shortened the release cycle from 4 to 3 weeks.",
-        "Led the phased AngularJS to Angular 17 migration of a large no-code, configuration-driven application: zero migration-related downtime, all client configurations preserved, +30% render performance, -50% build time.",
-        "Designed and delivered a low-code BI dashboard with real-time reports and a queue-based notification service for exports; used by ~100 people in 3 departments and ~300 external clients.",
+        "Worked directly with 200+ B2B clients on payment integrations: gathered requirements, designed the solution, and delivered it end to end.",
+        "Delivered a no-code A/B testing platform used by ~200 B2B clients (~1,000 concurrent experiments), saving ~30 dev-hours a month and enabling a new paid subscription tier.",
+        "Designed and delivered a low-code BI dashboard with real-time reports and a queue-based export notification service, used by ~100 internal users across 3 departments and ~300 external B2B clients.",
         "Built or migrated 1,000+ reports from the legacy system; auto-filters halved report setup time.",
-        "Delivered a no-code A/B testing platform used by ~200 clients (~1,000 concurrent experiments), saving ~30 dev-hours a month and enabling a new paid subscription tier.",
-        "Contributed to the ColdFusion to C# migration of the core backend: architecture design and development."
+        "Led the phased migration of a large no-code, configuration-driven application from AngularJS to Angular 17: zero migration-related downtime, all client configurations preserved, +30% render performance, -50% build time.",
+        "Co-designed and developed the core backend migration from ColdFusion to C#, including the architecture.",
+        "Led a team of 5 developers: grew 4 juniors to senior level and shortened the release cycle from 4 to 3 weeks."
       ],
       "stack": [
         "Angular",
+        "React",
         "TypeScript",
         "RxJS",
         "NgRx",
         "C#",
-        ".NET",
         "Python",
+        ".NET",
         "MSSQL",
         "MySQL",
         "Azure",
@@ -122,6 +145,18 @@
         "Built and maintained full-stack business applications with Angular, ColdFusion and MSSQL."
       ],
       "stack": ["Angular", "TypeScript", "C#", "ColdFusion", "MSSQL"]
+    },
+    {
+      "title": "Software Developer",
+      "company": "Redmond",
+      "location": "St. Petersburg, Russia",
+      "period": "09/2013 - 08/2016",
+      "highlights": [
+        "Developed new components and enhanced helpdesk application functionality.",
+        "Designed dashboards and created workers for Qlik Sense BI server.",
+        "Collaborated with customers and provided technical support for applications."
+      ],
+      "stack": ["C#", ".Net", "MSSQL", "Qlik Sense"]
     }
   ],
   "skills": [
@@ -168,6 +203,18 @@
         "Designed an AI assistant architecture over internal data and services (RAG / MCP approaches)."
       ],
       "stack": ["React", "Next.js", "Capacitor", "Django", "PostgreSQL", "AWS", "Terraform"]
+    },
+    {
+      "name": "No-code form builder for nonprofits",
+      "tagline": "Yumasoft",
+      "role": "Design and delivery",
+      "description": "No-code form generation platform helping ~200 non-profit organizations run fundraising campaigns (20–100 campaigns per client) with 20+ payment integrations.",
+      "highlights": [
+        "Powers ~200 non-profit clients running 20 to 100 campaigns each.",
+        "Built integrations with 20+ payment providers, ranging from PayPal to local gateways.",
+        "Enabled non-technical teams to launch and customize donation forms independently."
+      ],
+      "stack": ["Angular", "TypeScript", "C#", "MSSQL"]
     },
     {
       "name": "AngularJS to Angular 17 migration",
