@@ -115,6 +115,11 @@
   cursor: pointer;
 }
 
+/* A table row's second line, carrying the cells a phone has no room for. */
+.showBelowMedium {
+  display: none;
+}
+
 .row:hover {
   background: color-mix(in srgb, var(--phosphor) 14%, transparent);
 }
@@ -148,6 +153,12 @@
     display: block;
     padding-left: 6ch;
   }
+
+  /* Wraps rather than cutting off: the dates at its end matter. */
+  .showBelowMedium {
+    display: block;
+    white-space: normal;
+  }
 }
 
 /*
@@ -168,16 +179,16 @@
 }
 
 /*
- * Just right of the ASCII art that follows, and exactly as tall. It floats
- * right, so a right margin pulls it back to the art's edge: whatever width the
- * art, the gap and the picture leave over. Sizes come from the art's own font
- * (see .art): a glyph 0.4em wide, a row 1.15em tall.
+ * Beside the ASCII art that follows, against the right edge and exactly as
+ * tall as the art. Sizes come from the art's own font (see .art): a glyph
+ * 0.4em wide, a row 1.15em tall.
  */
 .pictureArt {
   --art: min(1em, 4.4cqw);
   --side: calc(var(--rows) * 1.15 * var(--art));
 
-  margin: 0 max(0px, calc(100% - var(--cols) * 0.4 * var(--art) - 4ch - var(--side))) 0 0;
+  /* Held off the right edge, unless the banner needs that room. */
+  margin: 0 max(0px, min(5ch, calc(100% - var(--cols) * 0.4 * var(--art) - 4ch - var(--side)))) 0 0;
 }
 
 .pictureArt .pictureMask {
@@ -235,7 +246,8 @@
   }
 }
 
-.ghost .pictureMask {
+.ghost .pictureMask,
+.pictureStill .pictureMask {
   animation: none;
 }
 

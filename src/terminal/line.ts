@@ -11,12 +11,14 @@ export interface Picture {
   rows: number;
   /**
    * The edge it floats against, text running down the other side; or `art`:
-   * just right of the ASCII art printed after it, `rows` and `columns` being
-   * that art's size.
+   * against the right edge beside the ASCII art printed after it, `rows` and
+   * `columns` being that art's size.
    */
   side: 'left' | 'right' | 'art';
   /** Width of the art beside it, in characters; only for `art`. */
   columns?: number;
+  /** Shows at once instead of being drawn in: it was already on the screen. */
+  still?: boolean;
 }
 
 export type Tone = 'normal' | 'dim' | 'bright' | 'inverse';
@@ -32,6 +34,10 @@ export interface Span {
   hideBelow?: 'medium' | 'wide';
   /** On screens narrower than this, the span drops onto a row of its own, indented. */
   breakBelow?: 'medium';
+  /** Shown only on screens narrower than this, on a row of its own. */
+  showBelow?: 'medium';
+  /** Left indent in characters; wrapped text stays under the indented start. */
+  indent?: number;
 }
 
 export interface Line {

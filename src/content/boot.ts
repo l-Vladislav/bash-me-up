@@ -1,5 +1,5 @@
 import { action, art, blank, bright, dim, line, paced, toPlainText } from '../terminal/line';
-import type { Line } from '../terminal/line';
+import type { Line, Picture } from '../terminal/line';
 import portrait from '../assets/portrait.png';
 import type { Phosphor, Settings } from '../terminal/settings';
 import { banner, profile, terminal } from './resume';
@@ -17,16 +17,22 @@ const check = (label: string, result: string): Line =>
 const photo = { src: portrait, alt: `Portrait of ${profile.name}` };
 
 const bannerRows = art(banner);
-const bannerColumns = Math.max(...bannerRows.map((row) => toPlainText(row).length));
+
+/**
+ * On a wide screen the portrait sits right of the banner. The self test puts
+ * it in that very spot, so when the test is wiped the picture simply stays.
+ */
+const besideBanner: Picture = {
+  ...photo,
+  rows: bannerRows.length,
+  columns: Math.max(...bannerRows.map((row) => toPlainText(row).length)),
+  side: 'art',
+};
 
 /** The greeting printed once the terminal has booted. */
 export const welcome = (): Line[] => [
-  // Wide screens: just right of the banner, and as tall.
-  {
-    spans: [],
-    image: { ...photo, rows: bannerRows.length, columns: bannerColumns, side: 'art' },
-    screen: 'wide',
-  },
+  // Wide screens: right of the banner, and as tall; already there since the self test.
+  { spans: [], image: { ...besideBanner, still: true }, screen: 'wide' },
   ...bannerRows,
   blank(),
   // Narrow screens: as tall as the five rows that follow, which run down its right side.
@@ -42,10 +48,12 @@ export const welcome = (): Line[] => [
 const selfTest = (settings: Settings): Line[] =>
   paced(
     [
+      // The video memory test shows something worth looking at, where it will stay.
+      { spans: [], image: besideBanner, screen: 'wide' },
       line(bright(terminal.title), dim(`   ${terminal.rom}`)),
       blank(),
-      // The video memory test shows something worth looking at.
-      { spans: [], image: { ...photo, rows: 10, side: 'right' } },
+      // Narrow screens put it elsewhere on the welcome, so here it just sits right.
+      { spans: [], image: { ...photo, rows: 10, side: 'right' }, screen: 'narrow' },
       ...terminal.bootChecks.map(({ label, result }) => check(label, result)),
       check('PHOSPHOR', PHOSPHOR_NAMES[settings.phosphor]),
     ],

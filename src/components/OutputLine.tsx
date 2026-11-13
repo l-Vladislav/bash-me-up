@@ -20,6 +20,7 @@ function SpanView({ span, onCommand }: { span: Span; onCommand: (command: string
     span.hideBelow === 'medium' && styles.hideBelowMedium,
     span.hideBelow === 'wide' && styles.hideBelowWide,
     span.breakBelow === 'medium' && styles.breakBelowMedium,
+    span.showBelow === 'medium' && styles.showBelowMedium,
   );
 
   if (span.href) {
@@ -49,7 +50,12 @@ function SpanView({ span, onCommand }: { span: Span; onCommand: (command: string
     );
   }
 
-  return <span className={className}>{span.text}</span>;
+  const style = span.indent ? { paddingLeft: `${span.indent}ch` } : undefined;
+  return (
+    <span className={className} style={style}>
+      {span.text}
+    </span>
+  );
 }
 
 export function OutputLine({ line, onCommand }: OutputLineProps) {
@@ -62,7 +68,7 @@ export function OutputLine({ line, onCommand }: OutputLineProps) {
   };
 
   if (line.image) {
-    const { src, alt, rows, side, columns = 0 } = line.image;
+    const { src, alt, rows, side, columns = 0, still = false } = line.image;
     // The glow sits on the wrapper: a filter on the masked element itself would be cut off.
     return (
       <div
@@ -70,6 +76,7 @@ export function OutputLine({ line, onCommand }: OutputLineProps) {
           styles.picture,
           side === 'left' && styles.pictureLeft,
           side === 'art' && styles.pictureArt,
+          still && styles.pictureStill,
           line.screen === 'wide' && styles.onlyWide,
           line.screen === 'narrow' && styles.onlyNarrow,
         )}
