@@ -125,28 +125,9 @@
   }
 }
 
-/* Wrapped rows hang under the text, never deeper than 40% of the screen. */
-.hang {
-  --indent: min(var(--hang), 40cqw);
-
-  padding-left: var(--indent);
-  text-indent: calc(-1 * var(--indent));
-}
-
 @container (max-width: 30rem) {
   .hideBelowMedium {
     display: none;
-  }
-
-  /* Two-column rows, such as the help menus, fold into one column. */
-  .stack {
-    padding-left: 0;
-    text-indent: 0;
-  }
-
-  .breakBelowMedium {
-    display: block;
-    padding-left: 6ch;
   }
 }
 

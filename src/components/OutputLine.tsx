@@ -10,16 +10,16 @@ interface OutputLineProps {
 const classNames = (...names: (string | false | undefined)[]): string =>
   names.filter(Boolean).join(' ');
 
-/** Read by the `.hang` class; capped there, so wrapped text always keeps some room. */
-const hangingIndent = (characters: number): CSSProperties =>
-  ({ '--hang': `${characters}ch` }) as CSSProperties;
+const hangingIndent = (characters: number): CSSProperties => ({
+  paddingLeft: `${characters}ch`,
+  textIndent: `-${characters}ch`,
+});
 
 function SpanView({ span, onCommand }: { span: Span; onCommand: (command: string) => void }) {
   const className = classNames(
     styles[span.tone ?? 'normal'],
     span.hideBelow === 'medium' && styles.hideBelowMedium,
     span.hideBelow === 'wide' && styles.hideBelowWide,
-    span.breakBelow === 'medium' && styles.breakBelowMedium,
   );
 
   if (span.href) {
@@ -68,8 +68,6 @@ export function OutputLine({ line, onCommand }: OutputLineProps) {
         line.art && styles.art,
         line.nowrap && styles.nowrap,
         command && styles.row,
-        Boolean(line.hang) && styles.hang,
-        line.spans.some((span) => span.breakBelow) && styles.stack,
       )}
       style={line.hang ? hangingIndent(line.hang) : undefined}
       aria-hidden={line.art}
