@@ -3,6 +3,16 @@
  * markup, which keeps them pure, serialisable and trivially testable.
  */
 
+export interface Picture {
+  /** A mask whose alpha is the brightness; it is drawn in the phosphor colour. */
+  src: string;
+  alt: string;
+  /** Height in rows of text. */
+  rows: number;
+  /** The edge it floats against, text running down the other side; or a block of its own. */
+  side: 'left' | 'right' | 'block';
+}
+
 export type Tone = 'normal' | 'dim' | 'bright' | 'inverse';
 
 export interface Span {
@@ -34,11 +44,10 @@ export interface Line {
   art?: boolean;
   /** A typed command line: output that overflows the screen is paged from here. */
   echo?: boolean;
-  /**
-   * A picture instead of text: `src` is a mask whose alpha is the brightness,
-   * drawn in the phosphor colour. It floats right, so the next lines run beside it.
-   */
-  image?: { src: string; alt: string };
+  /** A picture instead of text; the lines printed after it run down its side. */
+  image?: Picture;
+  /** Shown only on wide screens, or only on narrow ones (below 30rem). */
+  screen?: 'wide' | 'narrow';
 }
 
 type Part = string | Span;

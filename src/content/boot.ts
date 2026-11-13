@@ -14,12 +14,18 @@ const PHOSPHOR_NAMES: Readonly<Record<Phosphor, string>> = { amber: 'P3 AMBER', 
 const check = (label: string, result: string): Line =>
   line(dim(`${label} `.padEnd(22, '.')), ` ${result}`);
 
+const photo = { src: portrait, alt: `Portrait of ${profile.name}` };
+
 /** The greeting printed once the terminal has booted. */
 export const welcome = (): Line[] => [
   ...art(banner),
   blank(),
+  // Wide screens: as tall as the five rows that follow, which run down its right side.
+  { spans: [], image: { ...photo, rows: 5, side: 'left' }, screen: 'wide' },
   line(bright(profile.name), ` - ${profile.title}`),
   line(dim(profile.focus)),
+  // Phones: under the name, where it has the width to itself.
+  { spans: [], image: { ...photo, rows: 6, side: 'block' }, screen: 'narrow' },
   blank(),
   line('Type ', action('help'), ' to list commands, or start with ', action('about'), '.'),
   blank(),
@@ -32,7 +38,7 @@ const selfTest = (settings: Settings): Line[] =>
       line(bright(terminal.title), dim(`   ${terminal.rom}`)),
       blank(),
       // The video memory test shows something worth looking at.
-      { spans: [], image: { src: portrait, alt: `Portrait of ${profile.name}` } },
+      { spans: [], image: { ...photo, rows: 10, side: 'right' } },
       ...terminal.bootChecks.map(({ label, result }) => check(label, result)),
       check('PHOSPHOR', PHOSPHOR_NAMES[settings.phosphor]),
     ],

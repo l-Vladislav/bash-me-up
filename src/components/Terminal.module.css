@@ -152,8 +152,8 @@
 
 /*
  * A picture on the tube: the phosphor colour shows through the image's alpha
- * and a grid of dots, so it reads as a raster of glowing points. It floats
- * right, and the lines printed after it run down its left side.
+ * and a grid of dots, so it reads as a raster of glowing points. It floats,
+ * and the lines printed after it run down its other side.
  */
 .picture {
   float: right;
@@ -161,8 +161,40 @@
   filter: drop-shadow(0 0 6px color-mix(in srgb, var(--phosphor) 55%, transparent));
 }
 
+/* Exactly as tall as the rows beside it, so the next output starts clear of it. */
+.pictureLeft {
+  float: left;
+  margin: 0 2ch 0 0;
+}
+
+/* On a line of its own, half a row clear of the text above. */
+.pictureBlock {
+  float: none;
+  width: fit-content;
+  margin: 0.5lh 0 0;
+}
+
+/* A short phone has no rows to spare for it; the self test shows it anyway. */
+@container tube (max-height: 28rem) {
+  /* Two classes, to win over the narrow-screen rule that shows it. */
+  .picture.pictureBlock {
+    display: none;
+  }
+}
+
+/* Lines meant for one kind of screen only; see the container query below. */
+.onlyNarrow {
+  display: none;
+}
+
+/* A new command always starts below any picture, never beside it. */
+[data-echo],
+.prompt {
+  clear: both;
+}
+
 .pictureMask {
-  height: min(10lh, 40cqh);
+  height: min(calc(var(--rows) * 1lh), 40cqh);
   aspect-ratio: 1;
   background: var(--phosphor);
   --dots: radial-gradient(circle, black 0 45%, transparent 60%);
@@ -181,9 +213,17 @@
   animation: draw 1.2s steps(20) both;
 }
 
-/* Too narrow to share a row: the picture sits on its own. */
+/* Too narrow to share a row: a big picture sits on its own. */
 @container (max-width: 30rem) {
-  .picture {
+  .onlyWide {
+    display: none;
+  }
+
+  .onlyNarrow {
+    display: block;
+  }
+
+  .picture:not(.pictureLeft, .pictureBlock) {
     float: none;
     width: fit-content;
     margin: 0 0 1lh;
