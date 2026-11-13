@@ -24,11 +24,11 @@
       },
       {
         "value": "~300",
-        "label": "B2B clients on the real-time BI platform I built"
+        "label": "B2B clients on the real-time BI platform"
       },
       {
         "value": "~200",
-        "label": "B2B clients on the no-code A/B testing platform I built"
+        "label": "B2B clients on the no-code A/B testing platform"
       },
       {
         "value": "6 mo",
@@ -192,7 +192,7 @@
   "projects": [
     {
       "name": "GovTech mobile MVP",
-      "tagline": "My Muni, 2025",
+      "tagline": "My Muni",
       "role": "Senior full-stack engineer, one of 3 engineers",
       "description": "Web and mobile app for a GovTech startup, shipped to a pilot in 6 months by a team of 3: push notifications, interactive 3D maps, AWS infrastructure as code.",
       "highlights": [
@@ -202,7 +202,16 @@
         "Set up and maintained the AWS infrastructure with Terraform (Docker, Redis, PostgreSQL).",
         "Designed an AI assistant architecture over internal data and services (RAG / MCP approaches)."
       ],
-      "stack": ["React", "Next.js", "Capacitor", "Django", "PostgreSQL", "AWS", "Terraform"]
+      "stack": [
+        "React",
+        "Python",
+        "Next.js",
+        "Capacitor",
+        "Django",
+        "PostgreSQL",
+        "AWS",
+        "Terraform"
+      ]
     },
     {
       "name": "No-code form builder for nonprofits",
@@ -214,7 +223,7 @@
         "Built integrations with 20+ payment providers, ranging from PayPal to local gateways.",
         "Enabled non-technical teams to launch and customize donation forms independently."
       ],
-      "stack": ["Angular", "TypeScript", "C#", "MSSQL"]
+      "stack": ["Angular", "TypeScript", "C#", "MSSQL", "Python"]
     },
     {
       "name": "AngularJS to Angular 17 migration",
@@ -238,7 +247,7 @@
         "Auto-filters halved report setup time: one report instead of two.",
         "Used by ~100 people in 3 departments and ~300 external clients."
       ],
-      "stack": ["Angular", "TypeScript", "MSSQL", "Azure"]
+      "stack": ["Angular", "TypeScript", "C#", "MSSQL", "Azure"]
     },
     {
       "name": "No-code A/B testing platform",
@@ -250,7 +259,7 @@
         "Removed the developer dependency for launching experiments, saving ~30 dev-hours a month.",
         "Enabled a new paid subscription tier."
       ],
-      "stack": ["Angular", "TypeScript", "RxJS"]
+      "stack": ["Angular", "TypeScript", "C#", "RxJS"]
     },
     {
       "name": "bash-me-up",
