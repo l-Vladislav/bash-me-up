@@ -2,6 +2,8 @@
   position: relative;
   height: 100%;
   font-family: var(--font-terminal);
+  /* Ligatures such as "fi" merge two cells into one glyph and break column alignment. */
+  font-variant-ligatures: none;
   /* Grows with the window, but never so tall that a page stops fitting on the screen:
      the term in screen heights (cqh) keeps about 27 rows visible on any monitor. */
   font-size: clamp(1.0625rem, min(0.8vw + 0.8rem, 3.2cqh), 1.625rem);
