@@ -61,6 +61,16 @@ export function OutputLine({ line, onCommand }: OutputLineProps) {
     if (command && !onControl) onCommand(command);
   };
 
+  if (line.image) {
+    const { src, alt } = line.image;
+    // The glow sits on the wrapper: a filter on the masked element itself would be cut off.
+    return (
+      <div className={styles.picture} role="img" aria-label={alt}>
+        <div className={styles.pictureMask} style={{ '--src': `url("${src}")` } as CSSProperties} />
+      </div>
+    );
+  }
+
   return (
     <div
       className={classNames(

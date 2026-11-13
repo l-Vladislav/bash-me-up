@@ -150,6 +150,59 @@
   }
 }
 
+/*
+ * A picture on the tube: the phosphor colour shows through the image's alpha
+ * and a grid of dots, so it reads as a raster of glowing points. It floats
+ * right, and the lines printed after it run down its left side.
+ */
+.picture {
+  float: right;
+  margin: 0 0 1lh 2ch;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--phosphor) 55%, transparent));
+}
+
+.pictureMask {
+  height: min(10lh, 40cqh);
+  aspect-ratio: 1;
+  background: var(--phosphor);
+  --dots: radial-gradient(circle, black 0 45%, transparent 60%);
+
+  -webkit-mask-image: var(--src), var(--dots);
+  -webkit-mask-size:
+    100% 100%,
+    3px 3px;
+  -webkit-mask-composite: source-in;
+  mask-image: var(--src), var(--dots);
+  mask-size:
+    100% 100%,
+    3px 3px;
+  mask-composite: intersect;
+  /* Drawn top to bottom, a band at a time, like a picture coming down the line. */
+  animation: draw 1.2s steps(20) both;
+}
+
+/* Too narrow to share a row: the picture sits on its own. */
+@container (max-width: 30rem) {
+  .picture {
+    float: none;
+    width: fit-content;
+    margin: 0 0 1lh;
+  }
+}
+
+.ghost .pictureMask {
+  animation: none;
+}
+
+@keyframes draw {
+  from {
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    clip-path: inset(0);
+  }
+}
+
 /* 54 columns of banner must fit: one VT323 glyph is 0.4em wide. */
 .art {
   font-size: min(1em, 4.4cqw);
@@ -266,7 +319,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .prompt:focus-within .cursor,
-  .line {
+  .line,
+  .pictureMask {
     animation: none;
   }
 

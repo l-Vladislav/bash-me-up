@@ -34,6 +34,11 @@ export interface Line {
   art?: boolean;
   /** A typed command line: output that overflows the screen is paged from here. */
   echo?: boolean;
+  /**
+   * A picture instead of text: `src` is a mask whose alpha is the brightness,
+   * drawn in the phosphor colour. It floats right, so the next lines run beside it.
+   */
+  image?: { src: string; alt: string };
 }
 
 type Part = string | Span;
