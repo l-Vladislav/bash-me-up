@@ -5,6 +5,7 @@ import { fileCommands } from './files';
 import { gameCommands } from './games';
 import { hiddenCommands, systemCommands } from './system';
 import { toolCommands } from './tools';
+import { designCommands } from './tools/design';
 import type { Command, CommandContext, CommandResult } from './types';
 
 export type { Command, CommandContext, CommandResult, Effect, Session, SessionStep } from './types';
@@ -22,29 +23,51 @@ const ALIASES: Readonly<Record<string, string>> = {
 
 const SECTIONS = ['portfolio', 'games', 'tools', 'terminal'] as const;
 
+interface Group {
+  title: string;
+  entries: readonly Command[];
+}
+
 interface Section {
   name: (typeof SECTIONS)[number];
   summary: string;
   entries: readonly Command[];
+  /** Splits a long section into titled groups on its help page. */
+  groups?: readonly Group[];
 }
 
 const INDENT = '  ';
 
 const synopsis = (name: string, usage?: string): string => (usage ? `${name} ${usage}` : name);
 
-/** Rows of `name  summary`, aligned and clickable, with wrapped text hanging under the summary. */
+interface MenuRow {
+  command: string;
+  name: string;
+  usage?: string;
+  summary: string;
+}
+
+const menuWidth = (rows: readonly MenuRow[]): number =>
+  Math.max(...rows.map(({ name, usage }) => synopsis(name, usage).length)) + 3;
+
+/**
+ * Rows of `name  summary`, aligned and clickable, with wrapped text hanging
+ * under the summary. On a phone the summary moves under the name instead.
+ */
 const menu = <T>(
   items: readonly T[],
-  label: (item: T) => { command: string; name: string; usage?: string; summary: string },
+  label: (item: T) => MenuRow,
+  /** Summary column; pass one to line several menus up with each other. */
+  width = menuWidth(items.map(label)),
 ): Line[] => {
   const rows = items.map(label);
-  const width = Math.max(...rows.map(({ name, usage }) => synopsis(name, usage).length)) + 3;
   return rows.map(({ command, name, usage, summary }) => ({
     spans: [
       { text: INDENT },
       action(command, name),
-      dim((usage ? ` ${usage}` : '').padEnd(width - name.length)),
-      { text: summary },
+      dim(usage ? ` ${usage}` : ''),
+      { text: ' '.repeat(width - synopsis(name, usage).length), hideBelow: 'medium' },
+      { text: summary, breakBelow: 'medium' },
     ],
     hang: INDENT.length + width,
     command,
@@ -73,16 +96,27 @@ const overview = (): Line[] => [
   line(dim('Pick a section, or type `help <section>`. Tab completes, Up/Down recall history.')),
 ];
 
-const sectionPage = ({ name, entries }: Section): Line[] => [
-  heading(name),
-  blank(),
-  ...menu(
-    entries.filter((command) => !command.hidden),
-    (command) => ({ ...command, command: command.name }),
-  ),
-  blank(),
-  line(action('help', '< all sections')),
-];
+const toRow = (command: Command): MenuRow => ({ ...command, command: command.name });
+
+const visible = (entries: readonly Command[]): Command[] =>
+  entries.filter((command) => !command.hidden);
+
+const sectionPage = ({ name, entries, groups }: Section): Line[] => {
+  // One summary column for the whole page, so the groups line up.
+  const width = menuWidth(visible(entries).map(toRow));
+  const body = groups
+    ? // The group titles part the groups, so no blank rows: the page still fits one screen.
+      groups.flatMap(({ title, entries: members }) => [
+        line(dim(title.toUpperCase())),
+        ...menu(visible(members), toRow, width),
+      ])
+    : menu(visible(entries), toRow, width);
+  // The way back shares the title row, as on the detail pages, so a page costs no extra lines.
+  const title: Line = {
+    spans: [...heading(name).spans, { text: '   ' }, action('help', '< all sections')],
+  };
+  return [title, blank(), ...body];
+};
 
 const help: Command = {
   name: 'help',
@@ -137,8 +171,12 @@ const sections: readonly Section[] = [
   },
   {
     name: 'tools',
-    summary: 'Calculator, calendar, Morse code, big letters and more',
-    entries: toolCommands,
+    summary: 'Design system maths, calculator, calendar, Morse code and more',
+    entries: [...designCommands, ...toolCommands],
+    groups: [
+      { title: 'design system', entries: designCommands },
+      { title: 'utilities', entries: toolCommands },
+    ],
   },
   {
     name: 'terminal',

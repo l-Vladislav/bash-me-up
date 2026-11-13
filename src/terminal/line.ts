@@ -14,6 +14,8 @@ export interface Span {
   command?: string;
   /** Table cell that is dropped when the screen is narrower than this. */
   hideBelow?: 'medium' | 'wide';
+  /** On screens narrower than this, the span drops onto a row of its own, indented. */
+  breakBelow?: 'medium';
 }
 
 export interface Line {
