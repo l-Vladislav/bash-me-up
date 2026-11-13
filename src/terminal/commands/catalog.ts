@@ -1,6 +1,6 @@
 import { action, blank, dim, heading, line } from '../line';
 import type { Line, Span } from '../line';
-import type { Command } from './types';
+import type { Command, CommandResult } from './types';
 
 export interface Column<T> {
   /** Header text, shown in capitals. */
@@ -17,7 +17,12 @@ export interface Column<T> {
  * `name` prints the table, `name <n>` opens item n.
  */
 export interface Catalog<T> {
+  /** The command that opens it, with any arguments before the item number, e.g. `gallery portraits`. */
   name: string;
+  /** Shown as the page title and in `< all ...`; the name by default. */
+  title?: string;
+  /** A command one level up, linked from the title row of the list, e.g. `gallery`. */
+  parent?: string;
   summary: string;
   /** Singular noun for one item, e.g. "project". */
   noun: string;
@@ -80,46 +85,57 @@ const table = <T>({ name, items, label, columns }: Catalog<T>): Line[] => {
   return [header, ...rows];
 };
 
-export const catalogCommand = <T>(catalog: Catalog<T>): Command => {
-  const { name, noun, items } = catalog;
+const article = (noun: string): string => (/^[aeiou]/i.test(noun) ? 'an' : 'a');
+
+/** The table, or with a number the page of that item: what `<name> [n]` prints. */
+export const openCatalog = <T>(catalog: Catalog<T>, selector?: string): CommandResult => {
+  const { name, noun, items, parent } = catalog;
+  const title = catalog.title ?? name;
   const range = `1-${items.length}`;
 
-  return {
-    name,
-    summary: catalog.summary,
-    usage: `[${range}]`,
-    options: items.map((_, index) => String(index + 1)),
-    run: ([selector]) => {
-      if (selector === undefined) {
-        return {
-          lines: [
-            heading(name),
-            blank(),
-            ...table(catalog),
-            blank(),
-            line(dim(`Select a ${noun} or type \`${name} <n>\`, e.g. `), action(`${name} 1`)),
-          ],
-        };
-      }
+  if (selector === undefined) {
+    // The way up shares the title row, as the item pages' navigation does.
+    const top: Line = parent
+      ? { spans: [...heading(title).spans, { text: '   ' }, action(parent, `< ${parent}`)] }
+      : heading(title);
+    return {
+      lines: [
+        top,
+        blank(),
+        ...table(catalog),
+        blank(),
+        line(
+          dim(`Select ${article(noun)} ${noun} or type \`${name} <n>\`, e.g. `),
+          action(`${name} 1`),
+        ),
+      ],
+    };
+  }
 
-      const index = Number(selector) - 1;
-      const item = items[index];
-      if (item === undefined) {
-        return { lines: [line(`${name}: no entry "${selector}" (expected ${range})`)] };
-      }
+  const index = Number(selector) - 1;
+  const item = items[index];
+  if (item === undefined) {
+    return { lines: [line(`${name}: no entry "${selector}" (expected ${range})`)] };
+  }
 
-      // Navigation shares the title row, so a page costs no extra lines.
-      const next = ((index + 1) % items.length) + 1;
-      const title: Line = {
-        spans: [
-          ...heading(`${noun} ${index + 1}/${items.length}`).spans,
-          { text: '   ' },
-          action(name, `< all ${name}`),
-          { text: '   ' },
-          action(`${name} ${next}`, `next ${noun} >`),
-        ],
-      };
-      return { lines: [title, blank(), ...catalog.details(item)] };
-    },
+  // Navigation shares the title row, so a page costs no extra lines.
+  const next = ((index + 1) % items.length) + 1;
+  const titleRow: Line = {
+    spans: [
+      ...heading(`${noun} ${index + 1}/${items.length}`).spans,
+      { text: '   ' },
+      action(name, `< all ${title}`),
+      { text: '   ' },
+      action(`${name} ${next}`, `next ${noun} >`),
+    ],
   };
+  return { lines: [titleRow, blank(), ...catalog.details(item)] };
 };
+
+export const catalogCommand = <T>(catalog: Catalog<T>): Command => ({
+  name: catalog.name,
+  summary: catalog.summary,
+  usage: `[1-${catalog.items.length}]`,
+  options: catalog.items.map((_, index) => String(index + 1)),
+  run: ([selector]) => openCatalog(catalog, selector),
+});

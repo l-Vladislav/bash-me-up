@@ -7,3 +7,13 @@ coverage
 .vscode/*
 !.vscode/extensions.json
 .idea
+
+# Original photos and previews stay local: only the masks made by
+# scripts/picture.py (src/assets/gallery/**/*.png) belong in the repository.
+*.jpg
+*.jpeg
+*.JPG
+*.JPEG
+*.heic
+*.HEIC
+*.preview.png

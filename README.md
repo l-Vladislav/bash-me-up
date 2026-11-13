@@ -78,12 +78,13 @@ No canvas, no WebGL, no images: the screen is ordinary selectable DOM text.
 
 ## Editing the content
 
-All text lives outside the code, in two files:
+All text lives outside the code:
 
 | File                                               | Contains                                                                                    |
 | -------------------------------------------------- | ------------------------------------------------------------------------------------------- |
 | [`content/portfolio.json`](content/portfolio.json) | Profile, experience, skills, projects, education, contacts, boot messages, front-panel keys |
 | [`content/banner.txt`](content/banner.txt)         | The ASCII banner on the welcome screen                                                      |
+| [`content/gallery.json`](content/gallery.json)     | Gallery albums, picture titles and captions                                                 |
 
 Adding a project is one more object in the `projects` array; it shows up in the table and gets its
 own page (`projects <n>`) automatically:
@@ -113,6 +114,33 @@ and a page of its own (`experience <n>`):
   "stack": ["React", "Python"],
 }
 ```
+
+### Adding a picture to the gallery
+
+Pictures glow in the phosphor colour: each is a small PNG whose alpha channel is the brightness.
+[`scripts/picture.py`](scripts/picture.py) makes one from a photo (needs Pillow and NumPy) and
+puts it in an album folder under `src/assets/gallery`:
+
+```sh
+python -I scripts/picture.py ~/Pictures/cat.jpg pets/cat   # writes src/assets/gallery/pets/cat.png
+```
+
+The photo is turned upright, keeps its proportions and has its levels set from its own darkest
+and brightest parts; nothing of its EXIF data (camera, GPS) reaches the site. A `cat.preview.png`
+next to the photo shows the result: if it is too dark, lower `--gamma` (default 1.5); `--square`
+crops a square for a face, and `--warm` drops a grey studio backdrop out of a portrait. Then list
+the picture in [`content/gallery.json`](content/gallery.json); a new folder there is a new album:
+
+```jsonc
+{
+  "folder": "pets", // the folder under src/assets/gallery, and `gallery pets`
+  "title": "Pets",
+  "description": "Who keeps me company",
+  "pictures": [{ "file": "cat.png", "title": "Cat", "caption": "Home, 2026" }],
+}
+```
+
+A picture listed without its file fails the build.
 
 Edit, commit, push: the site redeploys itself. The JSON is checked against the `Portfolio` type in
 [`src/content/resume.ts`](src/content/resume.ts), so a missing or misspelled field fails the build

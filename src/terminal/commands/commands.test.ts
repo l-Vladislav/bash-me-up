@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { gallery } from '../../content/gallery';
 import { contact, experience, profile, projects } from '../../content/resume';
 import { toPlainText } from '../line';
 import { DEFAULT_SETTINGS } from '../settings';
@@ -104,6 +105,27 @@ describe('content commands', () => {
 
     const first = experience[0];
     expect(output('experience 1')).toContain(first?.highlights[0]);
+  });
+
+  it('gallery lists albums, opens one by name or number, and shows a picture', () => {
+    const [album] = gallery;
+    const [picture] = album?.pictures ?? [];
+    expect(output('gallery')).toContain(album?.title);
+    expect(output('gallery')).toContain('Select an album');
+
+    const byName = output(`gallery ${album?.folder}`);
+    expect(byName).toBe(output('gallery 1'));
+    expect(byName).toContain(picture?.title);
+    expect(byName).toContain('< gallery');
+
+    const page = execute(`gallery ${album?.folder} 1`, context).lines;
+    expect(page.find((line) => line.image)?.image?.src).toBe(picture?.src);
+    expect(page.map(toPlainText).join('\n')).toContain(picture?.caption);
+  });
+
+  it('gallery names the albums it has when asked for one it does not', () => {
+    expect(output('gallery cats')).toContain(`no album "cats" (try ${gallery[0]?.folder}`);
+    expect(output(`gallery ${gallery[0]?.folder} 99`)).toContain('no entry "99"');
   });
 
   it('experience rejects an out-of-range entry', () => {

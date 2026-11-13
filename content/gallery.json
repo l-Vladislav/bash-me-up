@@ -1,0 +1,264 @@
+[
+  {
+    "folder": "saint-petersburg",
+    "title": "Saint Petersburg",
+    "description": "Home town, 2013-2020",
+    "pictures": [
+      {
+        "file": "accordion.png",
+        "title": "Accordion",
+        "caption": "Vasilyevsky Island, 2013"
+      },
+      {
+        "file": "white-night.png",
+        "title": "White night",
+        "caption": "Gulf of Finland, 2014"
+      },
+      {
+        "file": "chapel.png",
+        "title": "Chapel",
+        "caption": "Smolensky Lutheran Cemetery, 2014"
+      },
+      {
+        "file": "selfie.png",
+        "title": "Selfie",
+        "caption": "Okhta, 2014"
+      },
+      {
+        "file": "icebreaker.png",
+        "title": "Icebreaker",
+        "caption": "Neva Bay, 2015"
+      },
+      {
+        "file": "concrete.png",
+        "title": "Concrete",
+        "caption": "Vasilyevsky Island, 2015"
+      },
+      {
+        "file": "graffiti.png",
+        "title": "Graffiti",
+        "caption": "Petrogradsky Island, 2015"
+      },
+      {
+        "file": "ice.png",
+        "title": "On the ice",
+        "caption": "Lakhta, 2017"
+      },
+      {
+        "file": "five-corners.png",
+        "title": "Snowfall",
+        "caption": "Five Corners, 2018"
+      },
+      {
+        "file": "bridge.png",
+        "title": "Bridge at dusk",
+        "caption": "Kanonersky Island, 2020"
+      },
+      {
+        "file": "autumn.png",
+        "title": "Autumn",
+        "caption": "Saint Petersburg"
+      }
+    ]
+  },
+  {
+    "folder": "norway",
+    "title": "Norway",
+    "description": "By car to the Lofoten Islands, 2017",
+    "pictures": [
+      {
+        "file": "crew.png",
+        "title": "The crew",
+        "caption": "Finland, 2017"
+      },
+      {
+        "file": "driving.png",
+        "title": "At the wheel",
+        "caption": "Finland, 2017"
+      },
+      {
+        "file": "tent.png",
+        "title": "Tent with a view",
+        "caption": "Norway, 2017"
+      },
+      {
+        "file": "midnight-sun.png",
+        "title": "1 a.m., still light",
+        "caption": "Norway, 2017"
+      },
+      {
+        "file": "beach-camp.png",
+        "title": "Beach camp",
+        "caption": "Norway, 2017"
+      },
+      {
+        "file": "cabin.png",
+        "title": "Cabin",
+        "caption": "Hamnøy, Lofoten, 2017"
+      },
+      {
+        "file": "rorbu.png",
+        "title": "Rorbu",
+        "caption": "Hamnøy, Lofoten, 2017"
+      }
+    ]
+  },
+  {
+    "folder": "usa",
+    "title": "USA",
+    "description": "Utah, 2018-2019",
+    "pictures": [
+      {
+        "file": "trail.png",
+        "title": "Trail",
+        "caption": "Wasatch Range, Utah, 2018"
+      },
+      {
+        "file": "office.png",
+        "title": "Office",
+        "caption": "Centerville, Utah, 2018"
+      },
+      {
+        "file": "downtown.png",
+        "title": "Downtown",
+        "caption": "Ogden, Utah, 2018"
+      },
+      {
+        "file": "bike-path.png",
+        "title": "Bike path",
+        "caption": "Riverdale, Utah, 2018"
+      },
+      {
+        "file": "valley.png",
+        "title": "Before the rain",
+        "caption": "Ogden, Utah, 2018"
+      },
+      {
+        "file": "pumpkins.png",
+        "title": "Pumpkins",
+        "caption": "Ogden, Utah, 2018"
+      },
+      {
+        "file": "weber-state.png",
+        "title": "Weber State",
+        "caption": "Ogden, Utah, 2018"
+      },
+      {
+        "file": "capitol.png",
+        "title": "State Capitol",
+        "caption": "Salt Lake City, 2018"
+      },
+      {
+        "file": "derby.png",
+        "title": "Demolition derby",
+        "caption": "Ogden, Utah, 2019"
+      },
+      {
+        "file": "first-snow.png",
+        "title": "First snow",
+        "caption": "North Ogden, Utah, 2019"
+      },
+      {
+        "file": "morning.png",
+        "title": "Morning sun",
+        "caption": "Roy, Utah, 2019"
+      },
+      {
+        "file": "corn-maze.png",
+        "title": "Corn maze",
+        "caption": "Syracuse, Utah, 2019"
+      },
+      {
+        "file": "refinery.png",
+        "title": "Refinery at dusk",
+        "caption": "North Salt Lake, 2019"
+      },
+      {
+        "file": "wrestling.png",
+        "title": "Pro wrestling",
+        "caption": "Salt Lake City, 2019"
+      }
+    ]
+  },
+  {
+    "folder": "portugal",
+    "title": "Portugal",
+    "description": "Lisbon, 2018",
+    "pictures": [
+      {
+        "file": "tram.png",
+        "title": "Tram 28",
+        "caption": "Lisbon, 2018"
+      },
+      {
+        "file": "alfama.png",
+        "title": "Alfama roofs",
+        "caption": "Lisbon, 2018"
+      },
+      {
+        "file": "azulejos.png",
+        "title": "Azulejos",
+        "caption": "Lisbon, 2018"
+      },
+      {
+        "file": "yellow-house.png",
+        "title": "Yellow house",
+        "caption": "Lisbon, 2018"
+      },
+      {
+        "file": "cemetery.png",
+        "title": "Cemetery",
+        "caption": "Lisbon, 2018"
+      },
+      {
+        "file": "funicular.png",
+        "title": "Funicular",
+        "caption": "Lisbon, 2018"
+      },
+      {
+        "file": "miradouro.png",
+        "title": "Miradouro",
+        "caption": "Lisbon, 2018"
+      },
+      {
+        "file": "rooftop.png",
+        "title": "Breakfast on the roof",
+        "caption": "Lisbon, 2018"
+      }
+    ]
+  },
+  {
+    "folder": "now",
+    "title": "Now",
+    "description": "Haifa, 2024-2025",
+    "pictures": [
+      {
+        "file": "first-steps.png",
+        "title": "First steps on sand",
+        "caption": "Haifa, 2024"
+      },
+      {
+        "file": "promenade.png",
+        "title": "Promenade",
+        "caption": "Haifa, 2025"
+      },
+      {
+        "file": "family.png",
+        "title": "Family",
+        "caption": "Now"
+      }
+    ]
+  },
+  {
+    "folder": "portraits",
+    "title": "Portraits",
+    "description": "Faces on the phosphor",
+    "pictures": [
+      {
+        "file": "portrait.png",
+        "title": "Portrait",
+        "caption": "The author, as the VL-42 sees him"
+      }
+    ]
+  }
+]

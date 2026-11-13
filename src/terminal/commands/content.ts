@@ -1,8 +1,11 @@
 import { contact, education, experience, profile, projects, skills } from '../../content/resume';
 import type { Project, Role } from '../../content/resume';
+import { gallery } from '../../content/gallery';
+import type { Album, GalleryPicture } from '../../content/gallery';
 import { action, blank, bright, bullet, dim, heading, line, link } from '../line';
 import type { Line } from '../line';
-import { catalogCommand } from './catalog';
+import { catalogCommand, openCatalog } from './catalog';
+import type { Catalog } from './catalog';
 import type { Command } from './types';
 
 const pad = (text: string, width: number): string => text.padEnd(width);
@@ -143,10 +146,66 @@ const contactCommand: Command = {
   },
 };
 
+/** Rows of text a gallery picture is tall, at most; small screens shrink it. */
+const PICTURE_ROWS = 14;
+
+/** One album's pictures, as a catalog under `gallery <folder>`. */
+const albumCatalog = (album: Album): Catalog<GalleryPicture> => ({
+  name: `gallery ${album.folder}`,
+  title: album.title,
+  parent: 'gallery',
+  summary: album.description,
+  noun: 'picture',
+  items: album.pictures,
+  label: { title: 'PICTURE', value: (picture) => picture.title },
+  columns: [
+    { title: 'CAPTION', value: (picture) => picture.caption, dim: true, hideBelow: 'medium' },
+  ],
+  details: ({ src, title, caption }) => [
+    { spans: [], image: { src, alt: title, rows: PICTURE_ROWS, side: 'block' } },
+    line(dim(caption)),
+  ],
+});
+
+/** The albums themselves; an album's page is its own catalog of pictures. */
+const albums: Catalog<Album> = {
+  name: 'gallery',
+  summary: 'Pictures on the phosphor, in albums',
+  noun: 'album',
+  items: gallery,
+  label: { title: 'ALBUM', value: (album) => album.title },
+  columns: [
+    { title: 'PICTURES', value: (album) => String(album.pictures.length) },
+    { title: 'ABOUT', value: (album) => album.description, dim: true, hideBelow: 'medium' },
+  ],
+  details: () => [],
+};
+
+/** `gallery`, `gallery <album>` and `gallery <album> <n>`; an album by number or folder name. */
+const galleryCommand: Command = {
+  name: 'gallery',
+  summary: albums.summary,
+  usage: '[album] [n]',
+  options: gallery.map((album) => album.folder),
+  run: ([albumArg, picture]) => {
+    if (albumArg === undefined) return openCatalog(albums);
+
+    const album =
+      gallery.find(({ folder }) => folder === albumArg.toLowerCase()) ??
+      gallery[Number(albumArg) - 1];
+    if (!album) {
+      const names = gallery.map(({ folder }) => folder).join(', ');
+      return { lines: [line(`gallery: no album "${albumArg}" (try ${names})`)] };
+    }
+    return openCatalog(albumCatalog(album), picture);
+  },
+};
+
 export const contentCommands: readonly Command[] = [
   about,
   experienceCommand,
   skillsCommand,
   projectsCommand,
+  galleryCommand,
   contactCommand,
 ];

@@ -10,11 +10,11 @@ export interface Picture {
   /** Height in rows of text. */
   rows: number;
   /**
-   * The edge it floats against, text running down the other side; or `art`:
+   * The edge it floats against, text running down the other side; `art`:
    * against the right edge beside the ASCII art printed after it, `rows` and
-   * `columns` being that art's size.
+   * `columns` being that art's size; or `block`, on rows of its own.
    */
-  side: 'left' | 'right' | 'art';
+  side: 'left' | 'right' | 'art' | 'block';
   /** Width of the art beside it, in characters; only for `art`. */
   columns?: number;
   /** Shows at once instead of being drawn in: it was already on the screen. */

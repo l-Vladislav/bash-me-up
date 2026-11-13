@@ -76,6 +76,7 @@ export function OutputLine({ line, onCommand }: OutputLineProps) {
           styles.picture,
           side === 'left' && styles.pictureLeft,
           side === 'art' && styles.pictureArt,
+          side === 'block' && styles.pictureBlock,
           still && styles.pictureStill,
           line.screen === 'wide' && styles.onlyWide,
           line.screen === 'narrow' && styles.onlyNarrow,
@@ -85,7 +86,10 @@ export function OutputLine({ line, onCommand }: OutputLineProps) {
         role="img"
         aria-label={alt}
       >
-        <div className={styles.pictureMask} style={{ '--src': `url("${src}")` } as CSSProperties} />
+        <div className={styles.pictureMask} style={{ '--src': `url("${src}")` } as CSSProperties}>
+          {/* Invisible: it only gives the box the picture's own proportions. */}
+          <img className={styles.pictureSizer} src={src} alt="" />
+        </div>
       </div>
     );
   }

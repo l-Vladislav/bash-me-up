@@ -1,6 +1,6 @@
 import { action, art, blank, bright, dim, line, paced, toPlainText } from '../terminal/line';
 import type { Line, Picture } from '../terminal/line';
-import portrait from '../assets/portrait.png';
+import portrait from '../assets/gallery/portraits/portrait.png';
 import type { Phosphor, Settings } from '../terminal/settings';
 import { banner, profile, terminal } from './resume';
 

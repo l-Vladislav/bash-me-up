@@ -173,6 +173,15 @@
 }
 
 /* Exactly as tall as the rows beside it, so the next output starts clear of it. */
+/* Sizes the box: as tall as the picture's rows, as wide as its proportions allow. */
+.pictureSizer {
+  display: block;
+  width: auto;
+  max-width: 100cqw;
+  height: var(--height, min(calc(var(--rows) * 1lh), 40cqh));
+  visibility: hidden;
+}
+
 .pictureLeft {
   float: left;
   margin: 0 2ch 0 0;
@@ -191,8 +200,19 @@
   margin: 0 max(0px, min(5ch, calc(100% - var(--cols) * 0.4 * var(--art) - 4ch - var(--side)))) 0 0;
 }
 
-.pictureArt .pictureMask {
-  height: var(--side);
+.pictureArt {
+  --height: var(--side);
+}
+
+/* On rows of its own, as in the gallery: may take up to half the screen. */
+.pictureBlock {
+  float: none;
+  width: fit-content;
+  margin: 0 0 1lh;
+}
+
+.pictureBlock {
+  --height: min(calc(var(--rows) * 1lh), 55cqh);
 }
 
 /* Lines meant for one kind of screen only; see the container query below. */
@@ -207,20 +227,28 @@
 }
 
 .pictureMask {
-  height: min(calc(var(--rows) * 1lh), 40cqh);
-  aspect-ratio: 1;
-  background: var(--phosphor);
   --dots: radial-gradient(circle, black 0 45%, transparent 60%);
 
+  width: fit-content;
+  background: var(--phosphor);
+  /* The picture fits inside the box whatever its proportions; the dots tile it. */
   -webkit-mask-image: var(--src), var(--dots);
   -webkit-mask-size:
-    100% 100%,
+    contain,
     3px 3px;
+  -webkit-mask-position:
+    center,
+    0 0;
+  -webkit-mask-repeat: no-repeat, repeat;
   -webkit-mask-composite: source-in;
   mask-image: var(--src), var(--dots);
   mask-size:
-    100% 100%,
+    contain,
     3px 3px;
+  mask-position:
+    center,
+    0 0;
+  mask-repeat: no-repeat, repeat;
   mask-composite: intersect;
   /* Drawn top to bottom, a band at a time, like a picture coming down the line. */
   animation: draw 1.2s steps(20) both;

@@ -161,7 +161,7 @@ const man: Command = {
 const sections: readonly Section[] = [
   {
     name: 'portfolio',
-    summary: 'About me, experience, skills, projects, contacts',
+    summary: 'About me, experience, skills, projects, gallery, contacts',
     entries: contentCommands,
   },
   {
