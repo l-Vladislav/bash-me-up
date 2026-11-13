@@ -16,12 +16,26 @@ const roleDetails = (role: Role): Line[] => [
   { spans: [dim(`  stack: ${role.stack.join(', ')}`)], hang: 9 },
 ];
 
+/** Width of the `Education:` and `Speaks:` labels on the about page. */
+const LABEL = 'Education: '.length;
+
 const about: Command = {
   name: 'about',
   summary: 'Who I am and what I do',
   run: () => ({
     lines: [
-      heading('about'),
+      // Where to go next shares the title row, as on the detail pages, so the page fits one screen.
+      {
+        spans: [
+          ...heading('about').spans,
+          dim('   next: '),
+          action('experience'),
+          dim(', '),
+          action('projects'),
+          dim(', '),
+          action('contact'),
+        ],
+      },
       blank(),
       line(bright(profile.name), dim(`  ${profile.location}`)),
       line(`${profile.title} - ${profile.focus}`),
@@ -30,9 +44,15 @@ const about: Command = {
       blank(),
       ...profile.stats.map((stat) => line('  ', bright(pad(stat.value, 6)), stat.label)),
       blank(),
-      line(dim(`Speaks: ${profile.languages.join(', ')}`)),
-      blank(),
-      line('Next: ', action('experience'), ', ', action('projects'), ' or ', action('contact')),
+      // One row each on a wide screen; on a phone the text wraps under itself.
+      ...education.map(({ degree, school }): Line => ({
+        spans: [dim(pad('Education:', LABEL)), { text: degree }, dim(`, ${school}`)],
+        hang: LABEL,
+      })),
+      {
+        spans: [dim(pad('Speaks:', LABEL)), { text: profile.languages.join(', ') }],
+        hang: LABEL,
+      },
     ],
   }),
 };
@@ -104,17 +124,6 @@ const projectsCommand = catalogCommand<Project>({
   details: projectDetails,
 });
 
-const educationCommand: Command = {
-  name: 'education',
-  summary: 'Degree',
-  run: () => ({
-    lines: [
-      heading('education'),
-      ...education.flatMap((entry) => [blank(), line(bright(entry.degree)), line(entry.school)]),
-    ],
-  }),
-};
-
 const contactCommand: Command = {
   name: 'contact',
   summary: 'How to reach me',
@@ -139,6 +148,5 @@ export const contentCommands: readonly Command[] = [
   experienceCommand,
   skillsCommand,
   projectsCommand,
-  educationCommand,
   contactCommand,
 ];

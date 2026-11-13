@@ -146,8 +146,8 @@
 
 /* Now and then the horizontal hold slips by a pixel. */
 .image {
-  /* The terminal sizes its text from this box's height (cqh), and asks how tall it is. */
-  container: tube / size;
+  /* The terminal sizes its text from this box's height (cqh). */
+  container-type: size;
   animation: jitter 17s steps(1) infinite;
 }
 

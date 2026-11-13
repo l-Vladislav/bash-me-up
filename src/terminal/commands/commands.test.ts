@@ -78,6 +78,10 @@ describe('help', () => {
 describe('content commands', () => {
   it('about introduces the owner', () => {
     expect(output('about')).toContain(profile.name);
+    expect(output('about')).toContain('BSE in Software Engineering');
+    expect(output('about')).toContain(
+      'Saint Petersburg State University of Aerospace Instrumentation',
+    );
   });
 
   it('experience lists every role as a clickable row and opens one by number', () => {

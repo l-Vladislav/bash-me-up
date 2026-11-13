@@ -62,24 +62,23 @@ export function OutputLine({ line, onCommand }: OutputLineProps) {
   };
 
   if (line.image) {
-    const { src, alt, rows, side } = line.image;
+    const { src, alt, rows, side, columns = 0 } = line.image;
     // The glow sits on the wrapper: a filter on the masked element itself would be cut off.
     return (
       <div
         className={classNames(
           styles.picture,
           side === 'left' && styles.pictureLeft,
-          side === 'block' && styles.pictureBlock,
+          side === 'art' && styles.pictureArt,
           line.screen === 'wide' && styles.onlyWide,
           line.screen === 'narrow' && styles.onlyNarrow,
         )}
+        // Sizes on the wrapper: its margin needs them as much as the picture does.
+        style={{ '--rows': rows, '--cols': columns } as CSSProperties}
         role="img"
         aria-label={alt}
       >
-        <div
-          className={styles.pictureMask}
-          style={{ '--src': `url("${src}")`, '--rows': rows } as CSSProperties}
-        />
+        <div className={styles.pictureMask} style={{ '--src': `url("${src}")` } as CSSProperties} />
       </div>
     );
   }

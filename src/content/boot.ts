@@ -1,4 +1,4 @@
-import { action, art, blank, bright, dim, line, paced } from '../terminal/line';
+import { action, art, blank, bright, dim, line, paced, toPlainText } from '../terminal/line';
 import type { Line } from '../terminal/line';
 import portrait from '../assets/portrait.png';
 import type { Phosphor, Settings } from '../terminal/settings';
@@ -16,16 +16,23 @@ const check = (label: string, result: string): Line =>
 
 const photo = { src: portrait, alt: `Portrait of ${profile.name}` };
 
+const bannerRows = art(banner);
+const bannerColumns = Math.max(...bannerRows.map((row) => toPlainText(row).length));
+
 /** The greeting printed once the terminal has booted. */
 export const welcome = (): Line[] => [
-  ...art(banner),
+  // Wide screens: just right of the banner, and as tall.
+  {
+    spans: [],
+    image: { ...photo, rows: bannerRows.length, columns: bannerColumns, side: 'art' },
+    screen: 'wide',
+  },
+  ...bannerRows,
   blank(),
-  // Wide screens: as tall as the five rows that follow, which run down its right side.
-  { spans: [], image: { ...photo, rows: 5, side: 'left' }, screen: 'wide' },
+  // Narrow screens: as tall as the five rows that follow, which run down its right side.
+  { spans: [], image: { ...photo, rows: 5, side: 'left' }, screen: 'narrow' },
   line(bright(profile.name), ` - ${profile.title}`),
   line(dim(profile.focus)),
-  // Phones: under the name, where it has the width to itself.
-  { spans: [], image: { ...photo, rows: 6, side: 'block' }, screen: 'narrow' },
   blank(),
   line('Type ', action('help'), ' to list commands, or start with ', action('about'), '.'),
   blank(),

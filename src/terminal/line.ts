@@ -9,8 +9,14 @@ export interface Picture {
   alt: string;
   /** Height in rows of text. */
   rows: number;
-  /** The edge it floats against, text running down the other side; or a block of its own. */
-  side: 'left' | 'right' | 'block';
+  /**
+   * The edge it floats against, text running down the other side; or `art`:
+   * just right of the ASCII art printed after it, `rows` and `columns` being
+   * that art's size.
+   */
+  side: 'left' | 'right' | 'art';
+  /** Width of the art beside it, in characters; only for `art`. */
+  columns?: number;
 }
 
 export type Tone = 'normal' | 'dim' | 'bright' | 'inverse';
@@ -46,7 +52,7 @@ export interface Line {
   echo?: boolean;
   /** A picture instead of text; the lines printed after it run down its side. */
   image?: Picture;
-  /** Shown only on wide screens, or only on narrow ones (below 30rem). */
+  /** Shown only on wide screens, or only on narrow ones (below 46rem). */
   screen?: 'wide' | 'narrow';
 }
 

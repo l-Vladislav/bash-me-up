@@ -167,19 +167,21 @@
   margin: 0 2ch 0 0;
 }
 
-/* On a line of its own, half a row clear of the text above. */
-.pictureBlock {
-  float: none;
-  width: fit-content;
-  margin: 0.5lh 0 0;
+/*
+ * Just right of the ASCII art that follows, and exactly as tall. It floats
+ * right, so a right margin pulls it back to the art's edge: whatever width the
+ * art, the gap and the picture leave over. Sizes come from the art's own font
+ * (see .art): a glyph 0.4em wide, a row 1.15em tall.
+ */
+.pictureArt {
+  --art: min(1em, 4.4cqw);
+  --side: calc(var(--rows) * 1.15 * var(--art));
+
+  margin: 0 max(0px, calc(100% - var(--cols) * 0.4 * var(--art) - 4ch - var(--side))) 0 0;
 }
 
-/* A short phone has no rows to spare for it; the self test shows it anyway. */
-@container tube (max-height: 28rem) {
-  /* Two classes, to win over the narrow-screen rule that shows it. */
-  .picture.pictureBlock {
-    display: none;
-  }
+.pictureArt .pictureMask {
+  height: var(--side);
 }
 
 /* Lines meant for one kind of screen only; see the container query below. */
@@ -213,8 +215,8 @@
   animation: draw 1.2s steps(20) both;
 }
 
-/* Too narrow to share a row: a big picture sits on its own. */
-@container (max-width: 30rem) {
+/* No room for a picture beside the banner: the narrow-screen layout takes over. */
+@container (max-width: 46rem) {
   .onlyWide {
     display: none;
   }
@@ -222,8 +224,11 @@
   .onlyNarrow {
     display: block;
   }
+}
 
-  .picture:not(.pictureLeft, .pictureBlock) {
+/* Too narrow to share a row: a big picture sits on its own. */
+@container (max-width: 30rem) {
+  .picture:not(.pictureLeft, .pictureArt) {
     float: none;
     width: fit-content;
     margin: 0 0 1lh;
