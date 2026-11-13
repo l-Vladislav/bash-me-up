@@ -90,6 +90,8 @@ export function Terminal({ shell, disabled = false }: TerminalProps) {
         className={paging ? `${styles.viewport} ${styles.paging}` : styles.viewport}
         onClick={handleClick}
         onScroll={pager.onScroll}
+        onWheel={pager.onUserScroll}
+        onTouchMove={pager.onUserScroll}
       >
         <div role="log" aria-live="polite">
           {screen.entries.map((entry) => (
