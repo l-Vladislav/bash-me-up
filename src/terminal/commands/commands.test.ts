@@ -52,14 +52,22 @@ describe('help', () => {
   it('fits on one screen: sections only, each a clickable row', () => {
     const lines = execute('help', context).lines;
     expect(lines.length).toBeLessThan(12);
-    expect(lines.flatMap((line) => line.command ?? [])).toEqual(
-      sections.map((section) => `help ${section}`),
-    );
+    expect(lines.flatMap((line) => line.command ?? [])).toEqual([
+      'help portfolio',
+      'gallery',
+      'help games',
+      'help tools',
+      'help terminal',
+    ]);
+  });
+
+  it('opens the gallery straight from its row of help', () => {
+    expect(output('help gallery')).toBe(output('gallery'));
   });
 
   it('lists every public command in exactly one section, and no hidden ones', () => {
     const pages = sections.map((section) => output(`help ${section}`));
-    for (const command of commands) {
+    for (const command of commands.filter(({ name }) => name !== 'gallery')) {
       const listedIn = pages.filter((page) => page.includes(`  ${command.name} `)).length;
       expect(listedIn, command.name).toBe(command.hidden ? 0 : 1);
     }

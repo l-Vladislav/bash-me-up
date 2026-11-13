@@ -206,6 +206,8 @@ export const contentCommands: readonly Command[] = [
   experienceCommand,
   skillsCommand,
   projectsCommand,
-  galleryCommand,
   contactCommand,
 ];
+
+/** A section of `help` on its own. */
+export const galleryCommands: readonly Command[] = [galleryCommand];

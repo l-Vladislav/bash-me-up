@@ -1,6 +1,6 @@
 import { action, blank, bright, dim, heading, line } from '../line';
 import type { Line } from '../line';
-import { contentCommands } from './content';
+import { contentCommands, galleryCommands } from './content';
 import { fileCommands } from './files';
 import { gameCommands } from './games';
 import { hiddenCommands, systemCommands } from './system';
@@ -21,7 +21,7 @@ const ALIASES: Readonly<Record<string, string>> = {
   tools: 'help tools',
 };
 
-const SECTIONS = ['portfolio', 'games', 'tools', 'terminal'] as const;
+const SECTIONS = ['portfolio', 'gallery', 'games', 'tools', 'terminal'] as const;
 
 interface Group {
   title: string;
@@ -32,6 +32,8 @@ interface Section {
   name: (typeof SECTIONS)[number];
   summary: string;
   entries: readonly Command[];
+  /** A section that is one command: its row, and `help <name>`, run that command instead. */
+  opens?: string;
   /** Splits a long section into titled groups on its help page. */
   groups?: readonly Group[];
 }
@@ -91,7 +93,11 @@ const manPage = (command: Command): Line[] => {
 const overview = (): Line[] => [
   heading('help'),
   blank(),
-  ...menu(sections, ({ name, summary }) => ({ command: `help ${name}`, name, summary })),
+  ...menu(sections, ({ name, summary, opens }) => ({
+    command: opens ?? `help ${name}`,
+    name,
+    summary,
+  })),
   blank(),
   line(dim('Pick a section, or type `help <section>`. Tab completes, Up/Down recall history.')),
 ];
@@ -123,10 +129,12 @@ const help: Command = {
   summary: 'Sections of commands; pass one to open it',
   usage: '[section]',
   options: SECTIONS,
-  run: ([topic]) => {
+  run: ([topic], context) => {
     if (topic === undefined) return { lines: overview() };
 
     const section = sections.find(({ name }) => name === topic.toLowerCase());
+    const opens = section?.opens === undefined ? undefined : findCommand(section.opens);
+    if (opens) return opens.run([], context);
     if (section) return { lines: sectionPage(section) };
 
     // `help calc` reads like `man calc`.
@@ -161,8 +169,14 @@ const man: Command = {
 const sections: readonly Section[] = [
   {
     name: 'portfolio',
-    summary: 'About me, experience, skills, projects, gallery, contacts',
+    summary: 'About me, experience, skills, projects, contacts',
     entries: contentCommands,
+  },
+  {
+    name: 'gallery',
+    summary: 'Photos: Saint Petersburg, Norway, Utah, Lisbon, Haifa',
+    entries: galleryCommands,
+    opens: 'gallery',
   },
   {
     name: 'games',
