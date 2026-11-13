@@ -12,6 +12,11 @@
   text-shadow: var(--glow);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+
+  --pad-y: clamp(14px, 3.2%, 40px);
+  --pad-x: clamp(18px, 5.5%, 72px);
+  /* One row of text plus a little air, and never less than a fingertip. */
+  --more-height: max(calc(1lh + 14px), 44px);
 }
 
 /* The scrolling picture area; the ghost layer reuses it to line up exactly. */
@@ -21,8 +26,60 @@
   inset: 0;
   overflow-y: auto;
   scrollbar-width: none;
-  padding: clamp(14px, 3.2%, 40px) clamp(18px, 5.5%, 72px);
+  padding: var(--pad-y) var(--pad-x);
   cursor: text;
+}
+
+/* While output is paged, the picture ends above the "more" bar. */
+.paging {
+  bottom: var(--more-height);
+}
+
+/* The pager's status line, `more` style: inverse label, the way on at the right. */
+.more {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1ch;
+  height: var(--more-height);
+  padding: 0 var(--pad-x);
+  border: 0;
+  border-top: 1px dashed color-mix(in srgb, var(--phosphor) 35%, transparent);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-shadow: inherit;
+  cursor: pointer;
+  animation: excite 0.45s ease-out;
+}
+
+.moreLabel {
+  padding: 0 0.5ch;
+  background: var(--phosphor);
+  color: var(--screen-black);
+  text-shadow: none;
+  box-shadow: var(--glow-box);
+}
+
+.moreAction {
+  color: var(--phosphor-bright);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+.more:hover .moreAction,
+.more:focus-visible .moreAction {
+  background: var(--phosphor);
+  color: var(--screen-black);
+  text-decoration: none;
+  text-shadow: none;
+}
+
+.more:focus-visible {
+  outline: none;
 }
 
 .viewport ::selection {
@@ -124,6 +181,16 @@
   position: relative;
   display: block;
   min-height: 1lh;
+}
+
+/* Out of sight but still focusable, at the end of the output. */
+.waiting {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .cursor {

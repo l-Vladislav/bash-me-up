@@ -45,6 +45,7 @@ const QUIT_WORDS = new Set(['quit', 'exit']);
 const echo = (input: string, prompt = PROMPT): Line => ({
   ...line(dim(`${prompt} `), input),
   delay: 0,
+  echo: true,
 });
 
 /** A blank row that sets a command's output apart from the next prompt. */

@@ -30,6 +30,8 @@ export interface Line {
   clear?: boolean;
   /** Preformatted ASCII art: never wraps, shrinks to fit narrow screens. */
   art?: boolean;
+  /** A typed command line: output that overflows the screen is paged from here. */
+  echo?: boolean;
 }
 
 type Part = string | Span;

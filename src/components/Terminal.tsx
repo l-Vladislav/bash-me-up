@@ -1,4 +1,6 @@
-import { useEffect, useEffectEvent, useLayoutEffect, useRef } from 'react';
+import { useEffect, useEffectEvent, useRef } from 'react';
+import { COARSE_POINTER_QUERY, useMediaQuery } from '../hooks/useMediaQuery';
+import { usePager } from '../hooks/usePager';
 import type { Shell } from '../hooks/useTerminal';
 import { OutputLine } from './OutputLine';
 import { Prompt } from './Prompt';
@@ -22,15 +24,16 @@ export function Terminal({ shell, disabled = false }: TerminalProps) {
   const { screen, busy, history, prompt, interactive, run, click, interrupt, clear, skip } = shell;
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  // On a touchscreen focus means a keyboard covering half the screen: wait for a tap.
+  const touch = useMediaQuery(COARSE_POINTER_QUERY);
 
-  // Keep the newest output in view, like paper feeding out of a teletype.
-  useLayoutEffect(() => {
-    scrollToEnd(scrollRef.current);
-  }, [screen.entries, busy]);
+  // New output feeds up like paper from a teletype, a screenful at a time.
+  const pager = usePager(scrollRef);
+  const paging = pager.progress !== null;
 
   useEffect(() => {
-    if (!busy && !disabled) inputRef.current?.focus({ preventScroll: true });
-  }, [busy, disabled]);
+    if (!busy && !disabled && !touch) inputRef.current?.focus({ preventScroll: true });
+  }, [busy, disabled, touch]);
 
   // Any key skips a printout in progress; otherwise typing anywhere lands in the prompt.
   const handleKeyDown = useEffectEvent((event: KeyboardEvent): void => {
@@ -38,7 +41,10 @@ export function Terminal({ shell, disabled = false }: TerminalProps) {
     if (event.target instanceof Element && event.target.closest('button, a, [role="slider"]')) {
       return;
     }
-    if (busy) {
+    if (event.key === 'PageDown' && paging) {
+      event.preventDefault();
+      pager.next();
+    } else if (busy) {
       skip();
     } else if (event.key.length === 1) {
       inputRef.current?.focus({ preventScroll: true });
@@ -54,6 +60,12 @@ export function Terminal({ shell, disabled = false }: TerminalProps) {
   const handleClick = (): void => {
     if (busy) skip();
     else if (!hasSelection()) inputRef.current?.focus({ preventScroll: true });
+  };
+
+  // Enter on an empty line turns the page, as in `more`; anything typed runs as usual.
+  const handleSubmit = (input: string): void => {
+    if (paging && input.trim() === '') pager.next();
+    else run(input);
   };
 
   return (
@@ -73,24 +85,36 @@ export function Terminal({ shell, disabled = false }: TerminalProps) {
         </div>
       )}
 
-      <div ref={scrollRef} className={styles.viewport} onClick={handleClick}>
+      <div
+        ref={scrollRef}
+        className={paging ? `${styles.viewport} ${styles.paging}` : styles.viewport}
+        onClick={handleClick}
+        onScroll={pager.onScroll}
+      >
         <div role="log" aria-live="polite">
           {screen.entries.map((entry) => (
             <OutputLine key={entry.id} line={entry.line} onCommand={click} />
           ))}
         </div>
-        {!busy && (
-          <Prompt
-            label={prompt}
-            history={interactive ? [] : history}
-            completion={!interactive}
-            inputRef={inputRef}
-            onSubmit={run}
-            onInterrupt={interrupt}
-            onClear={clear}
-          />
-        )}
+        {/* Hidden rather than removed while busy, so a phone keeps its keyboard up. */}
+        <Prompt
+          label={prompt}
+          waiting={busy}
+          history={interactive ? [] : history}
+          completion={!interactive}
+          inputRef={inputRef}
+          onSubmit={handleSubmit}
+          onInterrupt={interrupt}
+          onClear={clear}
+        />
       </div>
+
+      {paging && (
+        <button type="button" className={styles.more} onClick={pager.next}>
+          <span className={styles.moreLabel}>-- MORE ({pager.progress}%) --</span>
+          <span className={styles.moreAction}>next ▸</span>
+        </button>
+      )}
     </div>
   );
 }

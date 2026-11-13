@@ -5,7 +5,8 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   place-items: center;
-  height: 100dvh;
+  /* The visible area: shrinks when an on-screen keyboard slides up. */
+  height: var(--viewport-height, 100dvh);
   overflow: hidden;
   padding: clamp(8px, 2.2vmin, 28px);
   background: radial-gradient(ellipse 90% 70% at 50% 35%, #1a1713 0%, #0b0907 60%, #050404 100%);
@@ -267,6 +268,12 @@
   flex: none;
   gap: 14px;
 }
+.power {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: clamp(10px, 1.6vw, 22px);
+}
 
 .led {
   flex: none;
@@ -423,28 +430,66 @@
   }
 }
 
-@media (max-width: 719px) {
+/*
+ * Phones, upright or on their side: no case and no room, just the tube edge to
+ * edge with a strip of keys underneath. Keep in sync with COMPACT_QUERY.
+ */
+@media (max-width: 719px), (max-height: 519px) {
   .room {
     padding: 0;
+    background: #060606;
   }
 
   .stage {
+    width: 100%;
     height: 100%;
   }
 
   .wallGlow,
   .vents,
-  .nameplate {
+  .nameplate,
+  .power,
+  .case::before,
+  .case::after {
     display: none;
   }
 
   .case {
-    --pad: 8px;
+    /* The notch and rounded corners stay clear of the text. */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+    border-radius: 0;
+    background: #060606;
+    box-shadow: none;
+  }
 
+  .well {
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: none;
+  }
+
+  .screen,
+  .flat .screen {
     border-radius: 0;
   }
 
-  .case::after {
+  .glass {
+    background: radial-gradient(ellipse at center, transparent 70%, rgb(0 0 0 / 0.35) 100%);
+    box-shadow: none;
+  }
+
+  .panel {
+    min-height: 0;
+    margin: 0;
+    padding: 0 0 env(safe-area-inset-bottom);
+    border-top: 1px solid color-mix(in srgb, var(--phosphor) 22%, transparent);
+    box-shadow: none;
+    background: #0d0c0a;
+  }
+
+  /* While the on-screen keyboard is up, every row goes to the terminal. */
+  :global(:root[data-keyboard]) .panel {
     display: none;
   }
 }

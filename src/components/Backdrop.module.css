@@ -147,13 +147,13 @@
 }
 
 /* The monitor fills small screens, so the room is never seen or downloaded. */
-@media (max-width: 719px) {
+@media (max-width: 719px), (max-height: 519px) {
   .backdrop {
     display: none;
   }
 }
 
-@media (min-width: 720px) {
+@media (min-width: 720px) and (min-height: 520px) {
   .photo {
     background: url('../assets/server-room.webp') center / 100% 100%;
   }

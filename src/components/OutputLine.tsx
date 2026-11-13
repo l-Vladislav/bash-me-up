@@ -71,6 +71,7 @@ export function OutputLine({ line, onCommand }: OutputLineProps) {
       )}
       style={line.hang ? hangingIndent(line.hang) : undefined}
       aria-hidden={line.art}
+      data-echo={line.echo || undefined}
       onClick={command ? handleRowClick : undefined}
     >
       {line.spans.map((span, index) => (

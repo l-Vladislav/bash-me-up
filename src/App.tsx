@@ -5,11 +5,13 @@ import { Terminal } from './components/Terminal';
 import { terminal } from './content/resume';
 import { useSettings } from './hooks/useSettings';
 import { useTerminal } from './hooks/useTerminal';
+import { useVisualViewport } from './hooks/useVisualViewport';
 
 export function App() {
   const [settings, updateSettings] = useSettings();
   const [powered, setPowered] = useState(true);
   const shell = useTerminal(settings, updateSettings);
+  useVisualViewport();
 
   const handlePowerChange = (on: boolean): void => {
     // Switching back on is a cold start: the terminal boots from scratch.

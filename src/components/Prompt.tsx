@@ -7,6 +7,8 @@ const hasSelection = (): boolean => (window.getSelection()?.toString() ?? '') !=
 
 interface PromptProps {
   label: string;
+  /** Output is still printing: the line is hidden and ignores input, but keeps focus. */
+  waiting: boolean;
   history: readonly string[];
   /** Tab completes shell commands; off while a program owns the prompt. */
   completion: boolean;
@@ -22,6 +24,7 @@ interface PromptProps {
  */
 export function Prompt({
   label,
+  waiting,
   history,
   completion,
   inputRef,
@@ -49,6 +52,10 @@ export function Prompt({
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
+    if (waiting) {
+      event.preventDefault();
+      return;
+    }
     const withControl = event.ctrlKey || event.metaKey;
 
     if (event.key === 'Enter') {
@@ -77,7 +84,7 @@ export function Prompt({
   };
 
   return (
-    <label className={styles.prompt}>
+    <label className={waiting ? `${styles.prompt} ${styles.waiting}` : styles.prompt}>
       <span className={styles.dim}>{label} </span>
       <span>
         {value.slice(0, caret)}
@@ -89,6 +96,7 @@ export function Prompt({
         className={styles.input}
         value={value}
         onChange={(event) => {
+          if (waiting) return;
           setValue(event.target.value);
           setCaret(event.target.selectionStart ?? event.target.value.length);
         }}
