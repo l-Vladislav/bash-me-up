@@ -1,4 +1,5 @@
 import { useEffect, useEffectEvent, useRef } from 'react';
+import type { MouseEvent } from 'react';
 import { COARSE_POINTER_QUERY, useMediaQuery } from '../hooks/useMediaQuery';
 import { usePager } from '../hooks/usePager';
 import type { Shell } from '../hooks/useTerminal';
@@ -13,6 +14,10 @@ interface TerminalProps {
 }
 
 const hasSelection = (): boolean => (window.getSelection()?.toString() ?? '') !== '';
+
+/** Links, command buttons and clickable table rows in the output. */
+const isControl = (target: EventTarget): boolean =>
+  target instanceof Element && target.closest('button, a, [data-command]') !== null;
 
 const scrollToEnd = (element: HTMLElement | null): void => {
   if (element) element.scrollTop = element.scrollHeight;
@@ -57,9 +62,13 @@ export function Terminal({ shell, disabled = false }: TerminalProps) {
     return () => window.removeEventListener('keydown', listener);
   }, []);
 
-  const handleClick = (): void => {
+  const handleClick = (event: MouseEvent<HTMLDivElement>): void => {
     if (busy) skip();
-    else if (!hasSelection()) inputRef.current?.focus({ preventScroll: true });
+    // A tap on a link or command is not a wish to type: on a phone, focusing
+    // the prompt here would pop up the keyboard over the page it opens.
+    else if (!isControl(event.target) && !hasSelection()) {
+      inputRef.current?.focus({ preventScroll: true });
+    }
   };
 
   // Enter on an empty line turns the page, as in `more`; anything typed runs as usual.
