@@ -2,7 +2,6 @@ import { useId, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { createBarrelMap, displacementScale, supportsBarrel } from '../crt/barrel';
 import { useElementSize } from '../hooks/useElementSize';
-import { COMPACT_QUERY, useMediaQuery } from '../hooks/useMediaQuery';
 import type { UpdateSettings } from '../hooks/useSettings';
 import type { Settings } from '../terminal/settings';
 import { Backdrop } from './Backdrop';
@@ -49,10 +48,8 @@ export function Monitor({
   const imageRef = useRef<HTMLDivElement>(null);
   const size = useElementSize(imageRef);
   const [canBend] = useState(supportsBarrel);
-  // Edge to edge on a phone, bowed glass would only bend the text away from the edges.
-  const compact = useMediaQuery(COMPACT_QUERY);
 
-  const bend = settings.crt && canBend && !compact && size.width > 0 && size.height > 0;
+  const bend = settings.crt && canBend && size.width > 0 && size.height > 0;
   const map = useMemo(() => (bend ? createBarrelMap(size) : ''), [bend, size]);
 
   const picture: CSSProperties = {

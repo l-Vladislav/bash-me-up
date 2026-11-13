@@ -268,6 +268,7 @@
   flex: none;
   gap: 14px;
 }
+
 .power {
   display: flex;
   flex: none;
@@ -431,13 +432,13 @@
 }
 
 /*
- * Phones, upright or on their side: no case and no room, just the tube edge to
- * edge with a strip of keys underneath. Keep in sync with COMPACT_QUERY.
+ * Phones, upright or on their side: the monitor fills the viewport, a thin
+ * bezel round the tube and the front panel below. The same breakpoint is in
+ * Backdrop and QuickKeys.
  */
 @media (max-width: 719px), (max-height: 519px) {
   .room {
     padding: 0;
-    background: #060606;
   }
 
   .stage {
@@ -448,44 +449,28 @@
   .wallGlow,
   .vents,
   .nameplate,
-  .power,
-  .case::before,
   .case::after {
     display: none;
   }
 
   .case {
-    /* The notch and rounded corners stay clear of the text. */
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
-    border-radius: 0;
-    background: #060606;
-    box-shadow: none;
-  }
+    --pad: 8px;
 
-  .well {
-    padding: 0;
-    border-radius: 0;
-    box-shadow: none;
-    background: none;
-  }
-
-  .screen,
-  .flat .screen {
+    /* The notch and rounded display corners stay clear of the tube. */
+    padding: max(var(--pad), env(safe-area-inset-top)) max(var(--pad), env(safe-area-inset-right)) 0
+      max(var(--pad), env(safe-area-inset-left));
     border-radius: 0;
   }
 
-  .glass {
-    background: radial-gradient(ellipse at center, transparent 70%, rgb(0 0 0 / 0.35) 100%);
-    box-shadow: none;
-  }
-
+  /* Keys wrap onto a second row; power sits level with the first. */
   .panel {
+    align-items: flex-start;
     min-height: 0;
-    margin: 0;
-    padding: 0 0 env(safe-area-inset-bottom);
-    border-top: 1px solid color-mix(in srgb, var(--phosphor) 22%, transparent);
-    box-shadow: none;
-    background: #0d0c0a;
+    padding: 6px calc(var(--pad) + 4px) max(6px, env(safe-area-inset-bottom));
+  }
+
+  .power {
+    margin-top: 9px;
   }
 
   /* While the on-screen keyboard is up, every row goes to the terminal. */

@@ -44,26 +44,16 @@
   outline-offset: 2px;
 }
 
-/* Phones: finger-sized keys under the screen, in as many rows as they need. */
+/* Phones: the same keys, wrapping onto a second row when one is not enough. */
 @media (max-width: 719px), (max-height: 519px) {
   .keys {
-    /* Keys that do not fit wrap onto a second row, and each row fills the width. */
     flex-wrap: wrap;
-    gap: 6px;
-    padding: 8px 10px 10px;
+    row-gap: 10px;
     overflow: visible;
   }
 
   .key {
-    flex: 1 0 auto;
-    min-height: 40px;
-    padding: 0 12px;
-    font-size: 0.75rem;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
-  }
-
-  .key:focus-visible {
-    outline-color: var(--phosphor);
   }
 }
