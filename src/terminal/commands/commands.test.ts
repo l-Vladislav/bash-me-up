@@ -84,6 +84,16 @@ describe('content commands', () => {
     );
   });
 
+  it('a phone gets the dropped columns on a second line of each row', () => {
+    const [first] = experience;
+    const row = execute('experience', context).lines.find(
+      (line) => line.command === 'experience 1',
+    );
+    const second = row?.spans.find((span) => span.showBelow === 'medium');
+    expect(second?.text).toContain(`${first?.company} · `);
+    expect(second?.text).toContain(first?.period.replaceAll(' - ', ' - '));
+  });
+
   it('experience lists every role as a clickable row and opens one by number', () => {
     const table = execute('experience', context).lines;
     const rowCommands = table.flatMap((line) => line.command ?? []);

@@ -56,15 +56,21 @@ const table = <T>({ name, items, label, columns }: Catalog<T>): Line[] => {
     nowrap: true,
   };
 
+  // On a phone the columns that drop out move to a second line under the label.
+  const folded = columns.filter((column) => column.hideBelow);
+
   const rows = items.map((item, index): Line => {
     const command = `${name} ${index + 1}`;
     const text = label.value(item);
+    // Ranges such as `01/2025 - present` wrap as a whole, never at the dash.
+    const details = folded.map((column) => column.value(item).replaceAll(' - ', ' - ')).join(' · ');
     return {
       spans: [
         dim(`[${index + 1}]`.padEnd(indexWidth)),
         action(command, text),
         { text: ' '.repeat(labelWidth - text.length) },
         ...columns.map((column, at) => cell(column, at, column.value(item), column.dim ?? false)),
+        ...(details ? [{ ...dim(details), showBelow: 'medium' as const, indent: indexWidth }] : []),
       ],
       nowrap: true,
       command,
