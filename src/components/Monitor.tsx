@@ -3,11 +3,13 @@ import type { CSSProperties, ReactNode } from 'react';
 import { createBarrelMap, displacementScale, supportsBarrel } from '../crt/barrel';
 import { useElementSize } from '../hooks/useElementSize';
 import type { UpdateSettings } from '../hooks/useSettings';
-import type { Settings } from '../terminal/settings';
+import type { Phosphor, Settings } from '../terminal/settings';
 import { Backdrop } from './Backdrop';
 import { Knob } from './Knob';
 import styles from './Monitor.module.css';
 import { PowerSwitch } from './PowerSwitch';
+import { Selector } from './Selector';
+import type { SelectorOption } from './Selector';
 
 /** How far the glass bulges: 0 is flat, ~0.05 is a fishbowl. */
 const CURVATURE = 0.032;
@@ -15,6 +17,11 @@ const CURVATURE = 0.032;
 /** CSS filter amounts at the knobs' end stops; the centre position is neutral. */
 const BRIGHTNESS_RANGE = { min: 0.5, max: 1.5 };
 const CONTRAST_RANGE = { min: 0.6, max: 1.4 };
+
+const PHOSPHOR_OPTIONS: readonly [SelectorOption<Phosphor>, SelectorOption<Phosphor>] = [
+  { value: 'amber', legend: 'AMB' },
+  { value: 'green', legend: 'GRN' },
+];
 
 const scale = (position: number, range: { min: number; max: number }): number =>
   range.min + position * (range.max - range.min);
@@ -99,13 +106,22 @@ export function Monitor({
                 onChange={(contrast) => onSettingsChange({ contrast })}
               />
             </div>
-            <div className={styles.power}>
-              <PowerSwitch on={powered} onChange={onPowerChange} />
-              <span
-                className={styles.led}
-                role="img"
-                aria-label={powered ? 'Power on' : 'Power off'}
+            {/* Beside the power switch on the desktop, under it on a phone. */}
+            <div className={styles.side}>
+              <Selector
+                label="Phosphor"
+                options={PHOSPHOR_OPTIONS}
+                value={settings.phosphor}
+                onChange={(phosphor) => onSettingsChange({ phosphor })}
               />
+              <div className={styles.power}>
+                <PowerSwitch on={powered} onChange={onPowerChange} />
+                <span
+                  className={styles.led}
+                  role="img"
+                  aria-label={powered ? 'Power on' : 'Power off'}
+                />
+              </div>
             </div>
           </footer>
         </div>

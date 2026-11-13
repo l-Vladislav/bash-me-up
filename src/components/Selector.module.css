@@ -1,0 +1,77 @@
+/* Legends either side of the knob, the caption underneath like the other knobs. */
+.selector {
+  display: grid;
+  flex: none;
+  grid-template-columns: auto 26px auto;
+  align-items: start;
+  justify-items: center;
+  gap: 4px 5px;
+}
+
+/* Up level with the pointer, which rests 45 degrees either side of the top. */
+.legend {
+  padding-top: 2px;
+  color: #6f6857;
+  font: 700 0.5rem/1 var(--font-label);
+  letter-spacing: 0.14em;
+  text-shadow: 0 1px 0 rgb(255 255 255 / 0.4);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.active {
+  color: #1d1b16;
+}
+
+/* The same ribbed knob as the brightness controls, with a bar-shaped cap. */
+.dial {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, #4a463c 0 52%, transparent 54%),
+    repeating-conic-gradient(#1b1a15 0deg 9deg, #38352d 9deg 18deg);
+  box-shadow:
+    inset 0 1px 1px rgb(255 255 255 / 0.2),
+    0 2px 3px rgb(0 0 0 / 0.55),
+    0 0 0 2px rgb(0 0 0 / 0.16);
+  cursor: pointer;
+  /* Overshoots a touch and settles, like a detent catching. */
+  transition: rotate 0.22s cubic-bezier(0.3, 1.6, 0.5, 1);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dial::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: calc(50% - 1px);
+  width: 2px;
+  height: 8px;
+  border-radius: 1px;
+  background: #ece5d0;
+}
+
+.dial:focus-visible {
+  outline: 2px solid #12110d;
+  outline-offset: 3px;
+}
+
+.label {
+  grid-column: 1 / -1;
+  color: #3d392f;
+  font: 700 0.5rem/1 var(--font-label);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 rgb(255 255 255 / 0.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dial {
+    transition: none;
+  }
+}

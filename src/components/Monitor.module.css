@@ -269,6 +269,13 @@
   gap: 14px;
 }
 
+.side {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: clamp(10px, 1.6vw, 22px);
+}
+
 .power {
   display: flex;
   flex: none;
@@ -469,13 +476,22 @@
     padding: 6px calc(var(--pad) + 4px) max(6px, env(safe-area-inset-bottom));
   }
 
-  .power {
+  .side {
     margin-top: 9px;
   }
 
   /* While the on-screen keyboard is up, every row goes to the terminal. */
   :global(:root[data-keyboard]) .panel {
     display: none;
+  }
+}
+
+/* Upright phones: power on top, level with the first row of keys, the
+   phosphor switch under it, so the keys keep the width. */
+@media (max-width: 719px) and (orientation: portrait) {
+  .side {
+    flex-direction: column-reverse;
+    gap: 6px;
   }
 }
 

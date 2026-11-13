@@ -306,6 +306,6 @@
         "result": "DONE"
       }
     ],
-    "quickKeys": ["help", "about", "experience", "skills", "projects", "contact", "theme"]
+    "quickKeys": ["help", "about", "experience", "skills", "projects", "contact"]
   }
 }
