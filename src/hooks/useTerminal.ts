@@ -1,5 +1,5 @@
 import { useEffect, useEffectEvent, useReducer, useRef, useState } from 'react';
-import { track } from '../analytics';
+import { track } from '../visits';
 import { bootSequence } from '../content/boot';
 import { terminal } from '../content/resume';
 import { execute, findCommand, tokenize } from '../terminal/commands';

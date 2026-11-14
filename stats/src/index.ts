@@ -1,8 +1,8 @@
 /**
  * Visit counter for the terminal site.
  *
- *   POST /event  the site reports a page view or a command (sendBeacon, no cookies)
- *   GET  /       the dashboard, behind HTTP Basic auth (any user name, PASSWORD)
+ *   POST /api/terminal  the site reports a page view or a command (no cookies)
+ *   GET  /              the dashboard, behind HTTP Basic auth (any user name, PASSWORD)
  *
  * Country, city and network come from Cloudflare's own lookup of the request.
  * The visitor is a hash of IP and user agent salted with a secret and the
@@ -308,7 +308,7 @@ export default {
   async fetch(request, env): Promise<Response> {
     const { pathname } = new URL(request.url);
 
-    if (pathname === '/event' && request.method === 'POST') return record(request, env);
+    if (pathname === '/api/terminal' && request.method === 'POST') return record(request, env);
 
     if (pathname === '/' && request.method === 'GET') {
       if (!(await authorised(request, env))) {

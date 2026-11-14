@@ -1,7 +1,7 @@
 # Visit counter for the site: npm run stats:deploy
 # Secrets (not in this file): SALT and PASSWORD, set with
 #   npx wrangler secret put <NAME> --config stats/wrangler.toml
-name = "bash-me-up-stats"
+name = "bash-me-up-api"
 main = "src/index.ts"
 compatibility_date = "2026-11-01"
 workers_dev = true
