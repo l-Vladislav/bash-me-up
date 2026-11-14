@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { CSSProperties, RefObject } from 'react';
+import { isSoftwareRendering } from '../crt/renderer';
 import styles from './Backdrop.module.css';
 
 /** How an indicator lamp behaves; each maps to a keyframe animation. */
@@ -85,7 +86,8 @@ const lampStyle = ({ x, y, pattern, size = 2.2 }: Lamp, index: number): CSSPrope
 function usePointerPan(ref: RefObject<HTMLElement | null>): void {
   useEffect(() => {
     const element = ref.current;
-    if (!element || !matchMedia('(pointer: fine)').matches) return;
+    // Without a GPU the photo stays put (see the styles), so there is nothing to pan.
+    if (!element || !matchMedia('(pointer: fine)').matches || isSoftwareRendering()) return;
 
     let frame = 0;
     const onMove = (event: PointerEvent): void => {

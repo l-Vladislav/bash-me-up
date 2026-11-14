@@ -355,6 +355,19 @@
   border-radius: 0;
 }
 
+/* ---- No GPU: keep the look, drop what repaints every frame -------------- */
+
+:global(:root[data-lite]) .wallGlow,
+:global(:root[data-lite]) .image,
+:global(:root[data-lite]) .refresh,
+:global(:root[data-lite]) .flicker {
+  animation: none;
+}
+
+:global(:root[data-lite]) .refresh {
+  display: none;
+}
+
 /* ---- Motion --------------------------------------------------------------- */
 
 @keyframes power-on {

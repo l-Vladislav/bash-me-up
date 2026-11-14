@@ -159,6 +159,16 @@
   }
 }
 
+/* No GPU: blended lamps and a sliding photo repaint the whole room each frame. */
+:global(:root[data-lite]) .lamp {
+  display: none;
+}
+
+:global(:root[data-lite]) .photo {
+  translate: -50% -50%;
+  transition: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .lamp {
     display: none;

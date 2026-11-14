@@ -12,6 +12,8 @@
  * upscaling loses nothing) and only depends on the aspect ratio.
  */
 
+import { isSoftwareRendering } from './renderer';
+
 const MAP_SIZE = 96;
 
 /** |p|^2 peaks at 2 in the corners; dividing by 4 keeps offsets in [-0.5, 0.5]. */
@@ -69,10 +71,11 @@ export const createBarrelMap = (size: Size): string => {
 
 /**
  * Whether to bend the image at all. Safari cannot feed `feImage` into a filter
- * applied to HTML, and on phones the effect costs more than it adds.
+ * applied to HTML, and on phones or without a GPU the effect costs more than
+ * it adds.
  */
 export const supportsBarrel = (): boolean => {
   const isSafari = /^((?!chrome|android|crios|fxios).)*safari/i.test(navigator.userAgent);
   const isLargeScreen = window.matchMedia('(min-width: 720px) and (min-height: 480px)').matches;
-  return !isSafari && isLargeScreen;
+  return !isSafari && isLargeScreen && !isSoftwareRendering();
 };
