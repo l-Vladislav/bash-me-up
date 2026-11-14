@@ -1,0 +1,19 @@
+# Visit counter for the site: npm run stats:deploy
+# Secrets (not in this file): SALT and PASSWORD, set with
+#   npx wrangler secret put <NAME> --config stats/wrangler.toml
+name = "bash-me-up-stats"
+main = "src/index.ts"
+compatibility_date = "2026-11-01"
+workers_dev = true
+
+[vars]
+ALLOWED_ORIGINS = "https://l-vladislav.github.io"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "bash-me-up-stats"
+database_id = "4f6b0114-ec91-45c7-ac87-6700204c706d"
+
+# Deletes events older than a year.
+[triggers]
+crons = ["17 3 * * *"]

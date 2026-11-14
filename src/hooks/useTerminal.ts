@@ -1,4 +1,5 @@
 import { useEffect, useEffectEvent, useReducer, useRef, useState } from 'react';
+import { track } from '../analytics';
 import { bootSequence } from '../content/boot';
 import { terminal } from '../content/resume';
 import { execute, findCommand, tokenize } from '../terminal/commands';
@@ -117,6 +118,9 @@ export const useTerminal = (settings: Settings, updateSettings: UpdateSettings):
     const command = input.trim();
     const nextHistory = command ? [...history, command] : history;
     const result = execute(command, contextFor(nextHistory));
+    // Only the name of a known command is counted, never what was typed after it.
+    const known = findCommand(tokenize(command)[0] ?? '');
+    if (known) track('command', known.name);
     let output: readonly Line[] = [echo(command), ...result.lines, ...spacer(result.lines)];
 
     for (const effect of result.effects ?? []) {

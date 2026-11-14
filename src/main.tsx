@@ -4,6 +4,7 @@ import './styles/global.css';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
+import { trackView } from './analytics';
 import { isSoftwareRendering } from './crt/renderer';
 
 // Without a GPU the CRT effects cost most of the frame rate; the styles drop
@@ -18,3 +19,5 @@ createRoot(root).render(
     <App />
   </StrictMode>,
 );
+
+trackView();
