@@ -16,6 +16,8 @@ const ALIASES: Readonly<Record<string, string>> = {
   cls: 'clear',
   bc: 'calc',
   ttt: 'tictactoe',
+  fightclub: 'fight',
+  quiz: 'millionaire',
   portfolio: 'help portfolio',
   games: 'help games',
   tools: 'help tools',
@@ -180,7 +182,7 @@ const sections: readonly Section[] = [
   },
   {
     name: 'games',
-    summary: 'Moon landing, hangman, tic-tac-toe, guess the number',
+    summary: 'Résumé fight club, a tech quiz for a million, Moon landing and more',
     entries: gameCommands,
   },
   {

@@ -31,12 +31,14 @@ the monitor's front panel if you would rather not type.
 guest@larionov:~$ help
 
   portfolio   About me, experience, skills, projects, contacts
-  games       Moon landing, hangman, tic-tac-toe, guess the number
+  games       Résumé fight club, a tech quiz for a million, Moon landing and more
   tools       Calculator, calendar, Morse code, big letters and more
   terminal    Colour, CRT effect, history, clear, reboot
 
 guest@larionov:~$ games
 
+  fight       Beat the other candidates to the job offer
+  millionaire Fifteen tech questions between you and a million
   lander      Land on the Moon in one piece
   hangman     Guess the word before the drawing is done
   tictactoe   Noughts and crosses against the machine
@@ -52,6 +54,12 @@ guest@larionov:~$ games
 - `ls` and `cat about.txt` work too, for visitors with shell habits.
 - Games take over the prompt until they end; `quit` or **Ctrl+C** hands it back. The
   tic-tac-toe board is clickable too.
+- `fight` is a turn-based brawl in the spirit of the browser fight clubs of the 2000s: the
+  fighter's stats are counted from the résumé, every skill on it is a punch, and the opponents
+  are the other candidates for the job.
+- `millionaire` is the TV quiz with questions on system design, Node.js, Python and C#:
+  fifteen of them, three lifelines, and an explanation after every answer. New questions go
+  into `src/terminal/commands/games/millionaire/topics/`.
 - Deep links: [`?run=projects`](https://l-vladislav.github.io/bash-me-up/?run=projects) opens the
   site and types the command for you.
 

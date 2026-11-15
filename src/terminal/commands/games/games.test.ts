@@ -1,9 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { toPlainText } from '../../line';
 import { DEFAULT_SETTINGS } from '../../settings';
-import { execute } from '../index';
+import { execute, findCommand } from '../index';
 import type { CommandContext, Session, SessionStep } from '../types';
+import { blockedZones, strike } from './fight/combat';
+import type { Stats } from './fight/combat';
+import { choose } from './fight/index';
+import { HERO, RIVALS } from './fight/roster';
 import { MAX_MISSES, WORDS } from './hangman';
+import { LADDER, kept } from './millionaire/index';
+import { TOPICS } from './millionaire/questions';
 import { START, fly } from './lander';
 import type { Craft } from './lander';
 import { machineMove, winner } from './tictactoe';
@@ -178,5 +184,272 @@ describe('tictactoe', () => {
     const afterFirst = session.input('5').next;
     expect(text(afterFirst?.input('5') ?? { lines: [] })).toContain('taken');
     expect(text(session.input('0'))).toContain('from 1 to 9');
+  });
+});
+
+describe('fight', () => {
+  const even: Stats = { strength: 10, agility: 5, intuition: 5, endurance: 10 };
+  /** Dice that come up as scripted, then keep repeating the last face. */
+  const rolls = (...faces: number[]) => {
+    let at = 0;
+    return () => faces[Math.min(at++, faces.length - 1)] ?? 0;
+  };
+  // With every roll high nobody dodges or crits, blows do full damage, and the
+  // rival always hits the legs and covers legs+head.
+  const high = () => 0.99;
+  const enter = (random: () => number): Session => {
+    const ring = start('fight', random).input('').next;
+    if (!ring) throw new Error('the ring did not open');
+    return ring;
+  };
+  /** Repeats one move, walking through the breaks, until the evening ends. */
+  const slog = (move: string): SessionStep => {
+    let session: Session | undefined = enter(high);
+    let step: SessionStep = { lines: [] };
+    for (let turn = 0; session && turn < 500; turn += 1) {
+      step = session.input(session.prompt.startsWith('press') ? '' : move);
+      session = step.next;
+    }
+    return step;
+  };
+
+  it('builds the hero from the résumé', () => {
+    for (const value of Object.values(HERO.stats)) expect(value).toBeGreaterThan(0);
+    expect(HERO.moves.length).toBeGreaterThan(0);
+  });
+
+  it('a block covers the zone and the one below, wrapping from legs to head', () => {
+    expect(blockedZones(0)).toEqual([0, 1]);
+    expect(blockedZones(4)).toEqual([4, 0]);
+  });
+
+  it('resolves a blow: dodge, block, hit, critical, and a critical through a block', () => {
+    expect(strike(even, even, 0, 2, rolls(0))).toEqual({ kind: 'dodged', damage: 0 });
+    expect(strike(even, even, 2, 2, rolls(0.99))).toEqual({ kind: 'blocked', damage: 0 });
+    expect(strike(even, even, 0, 2, rolls(0.99, 0.99, 0))).toEqual({ kind: 'hit', damage: 10 });
+    expect(strike(even, even, 0, 2, rolls(0.99))).toEqual({ kind: 'hit', damage: 15 });
+    expect(strike(even, even, 0, 2, rolls(0.99, 0, 0))).toEqual({ kind: 'critical', damage: 20 });
+    expect(strike(even, even, 3, 2, rolls(0.99, 0, 0))).toEqual({ kind: 'pierced', damage: 10 });
+  });
+
+  it('reads a move typed whole, in halves, by name or from the buttons', () => {
+    expect(choose({}, '2 4')).toEqual({ hit: 1, block: 3 });
+    expect(choose({}, '24')).toEqual({ hit: 1, block: 3 });
+    expect(choose({}, 'head legs')).toEqual({ hit: 0, block: 4 });
+    expect(choose({}, '2')).toEqual({ hit: 1 });
+    expect(choose({ hit: 1 }, '4')).toEqual({ hit: 1, block: 3 });
+    expect(choose({ hit: 1 }, 'hit 5')).toEqual({ hit: 4 });
+    expect(choose({}, 'block 3')).toEqual({ block: 2 });
+    for (const junk of ['', '6', '0', '1 2 3', 'hit', 'block 9', 'punch']) {
+      expect(choose({}, junk), junk).toBeUndefined();
+    }
+  });
+
+  it('asks for the block after the hit, and rejects junk without losing the choice', () => {
+    const aimed = enter(high).input('2');
+    expect(text(aimed)).toContain('Aiming at the chest');
+    expect(aimed.next?.prompt).toBe('block 1-5>');
+
+    const junk = aimed.next?.input('nope');
+    expect(text(junk ?? { lines: [] })).toContain('Zones are 1-5');
+    expect(junk?.next?.prompt).toBe('block 1-5>');
+  });
+
+  it('strikes first, then takes the answer', () => {
+    // The chest is open and the hero's legs are not covered: both blows land in full.
+    const step = enter(high).input('2 1');
+    const [first] = RIVALS;
+    const answer = Math.floor((first?.stats.strength ?? 0) * 1.5);
+    expect(text(step)).toContain(`on ${first?.name}'s chest.  -`);
+    expect(text(step)).toContain(`on your legs.  -${answer} HP`);
+    expect(step.next?.prompt).toBe('hit 1-5>');
+  });
+
+  it('beating every candidate wins the offer', () => {
+    // Hits the open chest, covers the legs the rival keeps kicking.
+    const step = slog('2 4');
+    expect(text(step)).toContain('OFFER');
+    expect(text(step)).toContain(`CANDIDATE ${RIVALS.length}/${RIVALS.length}`);
+    expect(step.next).toBeUndefined();
+  });
+
+  it('hands over the loot and some health between bouts', () => {
+    let session: Session | undefined = enter(high);
+    let step: SessionStep = { lines: [] };
+    while (session && !session.prompt.startsWith('press')) {
+      step = session.input('2 1');
+      session = step.next;
+    }
+    expect(text(step)).toContain(RIVALS[0]?.loot?.name);
+    expect(text(step)).toMatch(/restores \d+ HP/);
+    expect(text(session?.input('') ?? { lines: [] })).toContain('CANDIDATE 2/');
+  });
+
+  it('losing ends in a rejection letter', () => {
+    // Hits the covered legs and leaves its own open.
+    const step = slog('5 1');
+    expect(text(step)).toContain('REJECTED');
+    expect(text(step)).toContain('HP [........] 0/');
+    expect(step.next).toBeUndefined();
+  });
+
+  it('draws the ring as wide as the banner, on a clean screen', () => {
+    const picture = start('fight')
+      .input('')
+      .lines.filter((entry) => entry.art);
+    expect(picture[0]?.clear).toBe(true);
+    for (const row of picture) expect(toPlainText(row)).toHaveLength(54);
+  });
+
+  it('keeps its buttons to itself: none of them is a shell command', () => {
+    const step = start('fight').input('');
+    const buttons = step.lines.flatMap(({ spans }) => spans.flatMap((span) => span.command ?? []));
+    expect(buttons).toHaveLength(10);
+    for (const button of [...buttons, 'next']) {
+      expect(findCommand(button.split(' ')[0] ?? ''), button).toBeUndefined();
+    }
+  });
+});
+
+describe('millionaire', () => {
+  const everything = TOPICS.flatMap(({ questions }) => questions);
+
+  /** The letter of the right answer to the question on the screen. */
+  const rightLetter = (step: SessionStep): string => {
+    const shown = text(step);
+    const question = everything.find(({ ask }) => shown.includes(ask));
+    const row = step.lines.find((entry) =>
+      toPlainText(entry).endsWith(`  ${question?.options[0]}`),
+    );
+    if (!row?.command) throw new Error('no right answer on the screen');
+    return row.command;
+  };
+  const wrongLetter = (step: SessionStep): string =>
+    ['a', 'b', 'c', 'd'].find((entry) => entry !== rightLetter(step)) ?? '';
+
+  const begin = (topic = 'design', random: () => number = () => 0): SessionStep => {
+    const { lines, session } = execute(`millionaire ${topic}`, contextWith(random));
+    return { lines, next: session };
+  };
+  /** Answers `count` questions rightly and returns the screen that follows. */
+  const climb = (count: number, from: SessionStep = begin()): SessionStep => {
+    let step = from;
+    for (let answered = 0; answered < count; answered += 1) {
+      step = step.next?.input(rightLetter(step)) ?? { lines: [] };
+    }
+    return step;
+  };
+
+  it('has enough sound questions of every tier in every subject', () => {
+    for (const { key, questions } of TOPICS) {
+      for (const tier of [1, 2, 3]) {
+        const count = questions.filter((question) => question.tier === tier).length;
+        expect(count, `${key}, tier ${tier}`).toBeGreaterThanOrEqual(5);
+      }
+    }
+    for (const { ask, options, why } of everything) {
+      expect(new Set(options).size, ask).toBe(4);
+      expect(why.length, ask).toBeGreaterThan(0);
+    }
+    const subjects = TOPICS.filter(({ key }) => key !== 'mix').flatMap(
+      ({ questions }) => questions,
+    );
+    expect(new Set(subjects.map(({ ask }) => ask)).size).toBe(subjects.length);
+  });
+
+  it('offers the subjects when started without one, and knows a wrong one', () => {
+    const menu = execute(
+      'millionaire',
+      contextWith(() => 0),
+    );
+    expect(menu.session).toBeUndefined();
+    expect(menu.lines.flatMap((entry) => entry.command ?? [])).toEqual(
+      TOPICS.map(({ key }) => `millionaire ${key}`),
+    );
+    expect(
+      text(
+        execute(
+          'millionaire cobol',
+          contextWith(() => 0),
+        ),
+      ),
+    ).toContain('no subject "cobol"');
+  });
+
+  it('asks fifteen questions, easy ones first, and pays a million for all of them', () => {
+    for (const { key } of TOPICS) {
+      const step = climb(
+        LADDER.length,
+        begin(key, () => 0.37),
+      );
+      expect(text(step), key).toContain('$1,000,000');
+      expect(step.next, key).toBeUndefined();
+    }
+    expect(text(begin())).toContain('QUESTION 1/15   for $100');
+    expect(text(climb(5))).toContain('QUESTION 6/15   for $2,000   safe: $1,000');
+    expect(text(climb(5))).toContain('$1,000 is now safe');
+  });
+
+  it('a wrong answer keeps only the last safe sum', () => {
+    expect([0, 4, 5, 9, 10, 14].map(kept)).toEqual([0, 0, 1000, 1000, 32000, 32000]);
+
+    const first = begin();
+    const lost = first.next?.input(wrongLetter(first)) ?? { lines: [] };
+    expect(text(lost)).toContain('Wrong. The answer was');
+    expect(text(lost)).toContain('You leave with $0.');
+    expect(lost.next).toBeUndefined();
+
+    const sixth = climb(5);
+    expect(text(sixth.next?.input(wrongLetter(sixth)) ?? { lines: [] })).toContain(
+      'You leave with $1,000.',
+    );
+  });
+
+  it('lets the player walk with what is won, but not before the first answer', () => {
+    expect(text(begin().next?.input('walk') ?? { lines: [] })).toContain('Nothing to take yet');
+    const left = climb(3).next?.input('walk');
+    expect(text(left ?? { lines: [] })).toContain('You take the money: $300.');
+    expect(left?.next).toBeUndefined();
+  });
+
+  it('50:50 leaves the right answer and one other, once', () => {
+    const first = begin();
+    const halved = first.next?.input('50:50') ?? { lines: [] };
+    const left = halved.lines.flatMap((entry) => (entry.hang ? (entry.command ?? []) : []));
+    expect(left).toHaveLength(2);
+    expect(left).toContain(rightLetter(first));
+
+    const gone = ['a', 'b', 'c', 'd'].find((entry) => !left.includes(entry)) ?? '';
+    expect(text(halved.next?.input(gone) ?? { lines: [] })).toContain('That answer is gone');
+    expect(text(halved.next?.input('50') ?? { lines: [] })).toContain('That lifeline is spent');
+  });
+
+  it('a senior names an answer and the audience votes add up to 100', () => {
+    const first = begin();
+    const called = first.next?.input('call') ?? { lines: [] };
+    expect(text(called)).toContain(`"Easy. It is ${rightLetter(first).toUpperCase()}."`);
+
+    const polled = called.next?.input('poll') ?? { lines: [] };
+    const shares = [...text(polled).matchAll(/(\d+)%/g)].map(([, share]) => Number(share));
+    expect(shares).toHaveLength(4);
+    expect(shares.reduce((sum, share) => sum + share, 0)).toBe(100);
+    expect(Math.max(...shares)).toBeGreaterThanOrEqual(60);
+    expect(text(polled.next?.input('call') ?? { lines: [] })).toContain('That lifeline is spent');
+  });
+
+  it('rejects anything that is not an answer without ending the game', () => {
+    for (const junk of ['', 'e', '5', 'constructor']) {
+      const step = begin().next?.input(junk);
+      expect(text(step ?? { lines: [] }), junk).toContain('Answer A, B, C or D');
+      expect(step?.next, junk).toBeDefined();
+    }
+  });
+
+  it('keeps its buttons to itself: none of them is a shell command', () => {
+    const buttons = climb(1).lines.flatMap(({ spans }) =>
+      spans.flatMap((span) => span.command ?? []),
+    );
+    expect(buttons).toHaveLength(8);
+    for (const button of buttons) expect(findCommand(button), button).toBeUndefined();
   });
 });
