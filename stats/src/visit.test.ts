@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clean, describeDevice, flag, isBot, referrerHost } from './visit';
+import { clean, describeDevice, flag, isBot, referrerHost, visitorId } from './visit';
 
 const CHROME_WINDOWS =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36';
@@ -86,5 +86,21 @@ describe('flag', () => {
     expect(flag('NO')).toBe('🇳🇴');
     expect(flag(null)).toBe('');
     expect(flag('T1')).toBe('');
+  });
+});
+
+describe('visitorId', () => {
+  it('takes a UUID, in lower case', () => {
+    expect(visitorId('3F2504E0-4F89-41D3-9A0C-0305E82C3301')).toBe(
+      '3f2504e0-4f89-41d3-9a0c-0305e82c3301',
+    );
+  });
+
+  it('drops anything else', () => {
+    expect(visitorId(undefined)).toBeNull();
+    expect(visitorId(42)).toBeNull();
+    expect(visitorId('')).toBeNull();
+    expect(visitorId('not-a-uuid')).toBeNull();
+    expect(visitorId('3f2504e0-4f89-41d3-9a0c-0305e82c3301x')).toBeNull();
   });
 });

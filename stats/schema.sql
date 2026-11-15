@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS events (
   day      TEXT    NOT NULL, -- YYYY-MM-DD, UTC
   type     TEXT    NOT NULL, -- 'view' or 'command'
   name     TEXT    NOT NULL, -- page (and ?run= command) or command name
-  visitor  TEXT    NOT NULL, -- salted hash of IP and user agent, new every day
+  visitor  TEXT    NOT NULL, -- salted hash of the browser's ID (or of IP and user agent, daily)
   country  TEXT,
   region   TEXT,
   city     TEXT,

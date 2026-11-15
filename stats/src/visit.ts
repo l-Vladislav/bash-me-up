@@ -1,7 +1,7 @@
 /**
  * Pure helpers that turn a raw request into the few facts worth keeping.
  * No IP address or full user agent is ever stored: only what they say about
- * the kind of device, and a hash that changes every day.
+ * the kind of device, and a salted hash of the visitor.
  */
 
 /** Crawlers, link previews, monitors and headless browsers. */
@@ -85,3 +85,9 @@ export const flag = (country: string | null): string =>
   country && /^[A-Z]{2}$/.test(country)
     ? String.fromCodePoint(...[...country].map((letter) => 0x1f1a5 + letter.charCodeAt(0)))
     : '';
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** The browser's own visitor ID, if it sent a well-formed one. */
+export const visitorId = (value: unknown): string | null =>
+  typeof value === 'string' && UUID.test(value) ? value.toLowerCase() : null;

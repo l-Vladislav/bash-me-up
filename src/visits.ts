@@ -3,18 +3,36 @@
  *
  * Only in the production build, and only when `VITE_STATS_URL` is set. A
  * keepalive fetch with a plain-text body needs no CORS preflight, never delays
- * the page and survives the tab closing. The only thing kept in the browser is
- * the owner's own "don't count me" mark.
+ * the page and survives the tab closing. The browser keeps a random visitor ID,
+ * so a person who comes back on another day is still one visitor, and the
+ * owner's own "don't count me" mark.
  */
 const ENDPOINT = import.meta.env.PROD ? import.meta.env.VITE_STATS_URL : undefined;
 
 /** `?me` marks this browser as the owner's, `?me=off` clears the mark. */
 const OWNER_PARAM = 'me';
 const OWNER_KEY = 'bash-me-up:owner';
+const VISITOR_KEY = 'bash-me-up:visitor';
 
 type EventType = 'view' | 'command';
 
 let owner = false;
+let visitor: string | undefined;
+
+/** The random ID this browser was given on its first visit, made now if there is none. */
+const readVisitor = (): string | undefined => {
+  try {
+    let id = localStorage.getItem(VISITOR_KEY);
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem(VISITOR_KEY, id);
+    }
+    return id;
+  } catch {
+    // Storage blocked: the Worker falls back to its daily hash.
+    return undefined;
+  }
+};
 
 /** Reads and applies `?me`, then takes it out of the address bar. */
 const readOwnerMark = (): void => {
@@ -39,6 +57,7 @@ export const track = (type: EventType, name: string): void => {
     const body = JSON.stringify({
       type,
       name,
+      vid: visitor,
       referrer: document.referrer,
       lang: navigator.language,
       screen: `${screen.width}x${screen.height}`,
@@ -58,6 +77,7 @@ export const track = (type: EventType, name: string): void => {
 /** The landing: the path, plus the command a `?run=` link types for the visitor. */
 export const trackView = (): void => {
   readOwnerMark();
+  visitor = readVisitor();
   const run = new URLSearchParams(location.search).get('run')?.trim().split(/\s+/)[0];
   track('view', run ? `?run=${run}` : '/');
 };

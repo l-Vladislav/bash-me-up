@@ -5,14 +5,16 @@
  *   GET  /              the dashboard, behind HTTP Basic auth (any user name, PASSWORD)
  *
  * Country, city and network come from Cloudflare's own lookup of the request.
- * The visitor is a hash of IP and user agent salted with a secret and the
- * date, so a person counts once a day and cannot be followed across days.
+ * The visitor is the random ID the site keeps in the browser, hashed with a
+ * secret, so a person who comes back on another day is still one visitor.
+ * When the browser sends none (storage blocked), it is a hash of IP and user
+ * agent salted with the secret and the date, good for that day only.
  */
-import { clean, describeDevice, flag, isBot, referrerHost } from './visit';
+import { clean, describeDevice, flag, isBot, referrerHost, visitorId } from './visit';
 
 interface Env {
   DB: D1Database;
-  /** Secret mixed into the daily visitor hash. */
+  /** Secret mixed into the visitor hash. */
   SALT: string;
   /** Password for the dashboard. */
   PASSWORD: string;
@@ -60,8 +62,11 @@ async function record(request: Request, env: Env): Promise<Response> {
 
   const now = Date.now();
   const day = new Date(now).toISOString().slice(0, 10);
+  const id = visitorId(body.vid);
   const ip = request.headers.get('CF-Connecting-IP') ?? '';
-  const visitor = hex(await sha256(`${env.SALT}|${day}|${ip}|${userAgent}`)).slice(0, 16);
+  const visitor = hex(
+    await sha256(id ? `${env.SALT}|id|${id}` : `${env.SALT}|${day}|${ip}|${userAgent}`),
+  ).slice(0, 16);
 
   const cf = request.cf;
   const { device, browser, os } = describeDevice(userAgent);
@@ -285,7 +290,9 @@ async function dashboard(request: Request, env: Env): Promise<Response> {
       escape(r.name),
     ]),
   )}
-  <p class="note">* уникальные за день: тот, кто зашёл в два разных дня, считается дважды.
+  <p class="note">* уникальные по браузеру: вернувшийся в другой день считается один раз.
+  Инкогнито, очистка данных или другой браузер — новый посетитель; Safari забывает
+  тех, кто не заходил неделю. Без хранилища и до 15.11.2026 — уникальные за день.
   Ботов и превью ссылок отсеиваем по User-Agent, но не всех.</p>
 </main>
 <script>
