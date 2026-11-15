@@ -1,4 +1,4 @@
-import { blank, bright, dim, line } from '../../line';
+import { animated, blank, bright, dim, line } from '../../line';
 import type { Line } from '../../line';
 import type { Command, Session, SessionStep } from '../types';
 import { pick, playAgain, quitHint } from './shared';
@@ -38,19 +38,33 @@ export const WORDS = [
 
 export const MAX_MISSES = 6;
 
-/** The gallows, drawn one more stroke per miss. */
-const gallows = (misses: number): Line[] => {
+/** Columns the body may swing either way, and how long it hangs at each point. */
+const SWING = [0, 1, 0, -1] as const;
+const SWING_MS = 380;
+
+/** The gallows, drawn one more stroke per miss; `sway` moves the body off the vertical. */
+const gallows = (misses: number, sway = 0): Line[] => {
   const part = (at: number, text: string): string => (misses >= at ? text : ' ');
+  // Five columns of body, pushed sideways without touching the post.
+  const body = (text: string): string =>
+    `${sway > 0 ? ` ${text.slice(0, -1)}` : sway < 0 ? `${text.slice(1)} ` : text} |`;
   return [
     '  +---+',
     '  |   |',
-    `  ${part(1, 'O')}   |`,
-    ` ${part(3, '/')}${part(2, '|')}${part(4, '\\')}  |`,
-    ` ${part(5, '/')} ${part(6, '\\')}  |`,
+    body(`  ${part(1, 'O')}  `),
+    body(` ${part(3, '/')}${part(2, '|')}${part(4, '\\')} `),
+    body(` ${part(5, '/')} ${part(6, '\\')} `),
     '      |',
     '=========',
   ].map((row) => ({ spans: [{ text: row }], art: true }));
 };
+
+/** The finished drawing, swinging in the wind. */
+const hanged = (): Line[] =>
+  animated(
+    gallows(MAX_MISSES),
+    SWING.map((sway) => ({ lines: gallows(MAX_MISSES, sway), ms: SWING_MS })),
+  ).map((row) => ({ ...row, loop: true }));
 
 interface Round {
   word: string;
@@ -77,7 +91,7 @@ const board = (round: Round): Line[] => {
 
 const end = (round: Round, won: boolean): SessionStep => ({
   lines: [
-    ...gallows(missesOf(round).length),
+    ...(won ? gallows(missesOf(round).length) : hanged()),
     blank(),
     won
       ? line('You got it: ', bright(round.word), '.')

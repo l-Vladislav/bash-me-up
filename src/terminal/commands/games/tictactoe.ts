@@ -1,4 +1,4 @@
-import { action, blank, bright, dim, line } from '../../line';
+import { action, animated, blank, bright, dim, line } from '../../line';
 import type { Line, Span } from '../../line';
 import type { Command, Session, SessionStep } from '../types';
 import { pick, playAgain, quitHint } from './shared';
@@ -22,13 +22,21 @@ const LINES = [
 /** How often the machine plays a random move instead of the best one. */
 const BLUNDER_RATE = 0.2;
 
-export const winner = (board: Board): Mark | null => {
-  for (const [a, b, c] of LINES) {
+/** The three cells in a row that won the game, if any. */
+const winningLine = (board: Board): readonly number[] | undefined =>
+  LINES.find(([a, b, c]) => {
     const mark = board[a];
-    if (mark && mark === board[b] && mark === board[c]) return mark;
-  }
-  return null;
+    return mark !== null && mark === board[b] && mark === board[c];
+  });
+
+export const winner = (board: Board): Mark | null => {
+  const [cell] = winningLine(board) ?? [];
+  return cell === undefined ? null : (board[cell] ?? null);
 };
+
+/** How many times the winning line blinks, and how long each half of a blink lasts. */
+const BLINKS = 3;
+const BLINK_MS = 220;
 
 const freeCells = (board: Board): number[] =>
   board.flatMap((mark, index) => (mark === null ? [index] : []));
@@ -60,12 +68,13 @@ export const machineMove = (board: Board, random: () => number): number => {
   );
 };
 
-/** The grid; free cells are numbered buttons, so a click is a move. */
-const grid = (board: Board): Line[] => {
+/** The grid; free cells are numbered buttons, so a click is a move. `faded` marks are dimmed. */
+const grid = (board: Board, faded: readonly number[] = []): Line[] => {
   const cell = (index: number): Span => {
     const mark = board[index];
     // Free cells are dim so the marks stand out; they are still buttons.
-    return mark ? bright(mark) : { ...action(String(index + 1)), tone: 'dim' };
+    if (!mark) return { ...action(String(index + 1)), tone: 'dim' };
+    return faded.includes(index) ? dim(mark) : bright(mark);
   };
   const row = (start: number): Line =>
     line(' ', cell(start), dim(' | '), cell(start + 1), dim(' | '), cell(start + 2));
@@ -77,7 +86,22 @@ const finish = (board: Board): SessionStep | undefined => {
   const won = winner(board);
   const message = won === 'X' ? 'You win!' : won === 'O' ? 'I win.' : 'A draw.';
   if (!won && freeCells(board).length > 0) return undefined;
-  return { lines: [...grid(board), blank(), line(message), blank(), playAgain('tictactoe')] };
+
+  // The three in a row blink before the board comes to rest.
+  const three = winningLine(board) ?? [];
+  const blink = Array.from({ length: BLINKS * 2 }, (_, half) => ({
+    lines: grid(board, half % 2 === 0 ? three : []),
+    ms: BLINK_MS,
+  }));
+  return {
+    lines: [
+      ...animated(grid(board), won ? blink : []),
+      blank(),
+      line(message),
+      blank(),
+      playAgain('tictactoe'),
+    ],
+  };
 };
 
 const play = (board: Board, random: () => number): Session => ({

@@ -92,7 +92,7 @@ export function Terminal({ shell, disabled = false }: TerminalProps) {
           inert
         >
           {screen.ghost.map((entry) => (
-            <OutputLine key={entry.id} line={entry.line} onCommand={ignoreCommand} />
+            <OutputLine key={entry.id} line={entry.line} onCommand={ignoreCommand} still />
           ))}
         </div>
       )}

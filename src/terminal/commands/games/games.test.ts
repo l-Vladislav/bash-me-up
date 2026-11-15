@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { toPlainText } from '../../line';
+import { playtime, toPlainText } from '../../line';
 import { DEFAULT_SETTINGS } from '../../settings';
 import { execute, findCommand } from '../index';
 import type { CommandContext, Session, SessionStep } from '../types';
@@ -111,6 +111,17 @@ describe('lander', () => {
     expect(empty.next?.input('').next).toBeUndefined();
   });
 
+  it('draws the touchdown, and holds the verdict until the craft is down', () => {
+    const step = playThrough(start('lander'), Array<string>(20).fill('0'));
+    const picture = step.lines.filter((entry) => entry.art);
+    expect(picture.at(-1)?.frames?.[0]?.spans[0]?.text).toBe('_'.repeat(21));
+    expect(toPlainText(picture.at(-1) ?? { spans: [] })).toContain('\\___/');
+
+    const wait = Math.max(...picture.map(playtime));
+    const verdict = step.lines.find((entry) => toPlainText(entry).startsWith('Contact at'));
+    expect(verdict?.frames).toEqual([{ spans: [], ms: wait }]);
+  });
+
   it('rejects burns out of range', () => {
     expect(text(playThrough(start('lander'), ['31']))).toContain('Burn rate from 0 to 30');
   });
@@ -132,6 +143,17 @@ describe('hangman', () => {
     const step = playThrough(start('hangman'), wrong.slice(0, MAX_MISSES));
     expect(text(step)).toContain(`The word was ${word}.`);
     expect(step.next).toBeUndefined();
+  });
+
+  it('leaves the loser swinging, and the winner alone', () => {
+    const lost = playThrough(start('hangman'), wrong.slice(0, MAX_MISSES));
+    const drawing = lost.lines.filter((entry) => entry.art);
+    expect(drawing.every((row) => row.loop && row.frames?.length === 4)).toBe(true);
+    const head = drawing[2]?.frames?.map(({ spans }) => spans[0]?.text.indexOf('O'));
+    expect(head).toEqual([2, 3, 2, 1]);
+
+    const won = playThrough(start('hangman'), letters);
+    expect(won.lines.some((entry) => entry.frames)).toBe(false);
   });
 
   it('accepts the whole word, and counts a wrong word as a miss', () => {
@@ -177,6 +199,19 @@ describe('tictactoe', () => {
     }
     expect(session).toBeUndefined();
     expect(text(step)).toMatch(/You win!|I win\.|A draw\./);
+  });
+
+  it('blinks the three in a row that won', () => {
+    // The machine always takes the lowest free cell: X wins on the diagonal 3-5-7.
+    const lazy = () => 0;
+    const step = playThrough(start('tictactoe', lazy), ['3', '5', '7']);
+    expect(text(step)).toContain('You win!');
+    const rows = step.lines.filter((entry) => entry.frames);
+    expect(rows).toHaveLength(5);
+    const tones = rows[0]?.frames?.map(
+      ({ spans }) => spans.find((span) => span.text === 'X')?.tone,
+    );
+    expect(tones).toEqual(['dim', 'bright', 'dim', 'bright', 'dim', 'bright']);
   });
 
   it('rejects taken and invalid cells', () => {
@@ -299,6 +334,34 @@ describe('fight', () => {
       .lines.filter((entry) => entry.art);
     expect(picture[0]?.clear).toBe(true);
     for (const row of picture) expect(toPlainText(row)).toHaveLength(54);
+  });
+
+  it('animates an exchange in place: every frame is a whole ring, the log shows as blows land', () => {
+    const step = enter(high).input('2 1');
+    const picture = step.lines.filter((entry) => entry.art);
+    expect(picture).toHaveLength(11);
+    for (const row of picture) {
+      // Two swings of four moments each.
+      expect(row.frames).toHaveLength(8);
+      for (const frame of row.frames ?? []) {
+        expect(frame.spans.map((span) => span.text).join('')).toHaveLength(54);
+      }
+    }
+    const shown = (moment: number): string =>
+      picture.map((row) => row.frames?.[moment]?.spans.map((span) => span.text).join('')).join('|');
+    expect(shown(2)).toContain('-16');
+    expect(shown(6)).toMatch(/-\d+/);
+
+    const [mine, theirs] = step.lines.filter((entry) => !entry.art && entry.frames);
+    expect(mine?.frames?.[0]).toEqual({ spans: [], ms: 160 });
+    expect(theirs?.frames?.[0]?.ms).toBeGreaterThan(160);
+  });
+
+  it('lays the loser on the floor', () => {
+    const step = slog('5 1');
+    const floor = step.lines.filter((entry) => entry.art).map(toPlainText);
+    expect(floor.join('|')).toContain('K.O.');
+    expect(floor.join('|')).toContain('o-|--<');
   });
 
   it('keeps its buttons to itself: none of them is a shell command', () => {
@@ -435,6 +498,26 @@ describe('millionaire', () => {
     expect(shares.reduce((sum, share) => sum + share, 0)).toBe(100);
     expect(Math.max(...shares)).toBeGreaterThanOrEqual(60);
     expect(text(polled.next?.input('call') ?? { lines: [] })).toContain('That lifeline is spent');
+  });
+
+  it('holds the verdict and the next question back for a drum roll', () => {
+    const first = begin();
+    const step = first.next?.input(rightLetter(first)) ?? { lines: [] };
+    const [verdict, ...rest] = step.lines;
+    const roll = verdict?.frames?.map(({ spans }) => spans.map((span) => span.text).join(''));
+    expect(roll?.[0]).toBe(`Final answer: ${rightLetter(first).toUpperCase()}`);
+    expect(roll?.at(-1)).toMatch(/ \. \. \.$/);
+    expect(verdict && toPlainText(verdict)).toContain('Correct.');
+
+    const wait = verdict ? playtime(verdict) : 0;
+    const question = rest.find((entry) => toPlainText(entry).includes('QUESTION 2/15'));
+    expect(question?.frames?.[0]).toEqual({ spans: [], ms: wait });
+  });
+
+  it('rains money on a millionaire, for ever', () => {
+    const rain = climb(LADDER.length).lines.filter((entry) => entry.loop);
+    expect(rain.length).toBeGreaterThan(0);
+    for (const row of rain) expect(row.art).toBe(true);
   });
 
   it('rejects anything that is not an answer without ending the game', () => {

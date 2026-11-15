@@ -3,7 +3,7 @@
  * quiz, on system design, Node.js, Python and C#. The questions live in
  * `questions` and `topics/`; this file runs the show.
  */
-import { action, blank, bright, dim, heading, line } from '../../../line';
+import { action, blank, bright, dim, heading, later, line } from '../../../line';
 import type { Line, Span } from '../../../line';
 import type { Command, Session, SessionStep } from '../../types';
 import { pick, playAgain, quitHint } from '../shared';
@@ -40,6 +40,16 @@ const SENIOR_SAYS: Readonly<Record<Tier, string>> = {
 const AUDIENCE_RIGHT: Readonly<Record<Tier, number>> = { 1: 60, 2: 45, 3: 32 };
 const AUDIENCE_SWING = 20;
 const BAR = 20;
+
+/** The pause before a verdict: "Final answer: B . . ." */
+const DOTS = ['', ' .', ' . .', ' . . .'] as const;
+const DOT_MS = 280;
+const SUSPENSE_MS = DOTS.length * DOT_MS;
+/** The audience's bars grow to their size in this many steps. */
+const VOTE_STEPS = 6;
+const VOTE_MS = 90;
+/** Money falling on the winner: rows of it, and patterns to cycle through. */
+const RAIN = { rows: 4, width: 44, patterns: 7, ms: 170 } as const;
 
 /** A question as it is put to the player: the options in their shuffled order. */
 interface Asked {
@@ -146,45 +156,82 @@ const actions = ({ lifelines, at }: Game): Line => {
   );
 };
 
-/** The question on a clean screen, under whatever was just said. */
-const screen = (game: Game, above: readonly Line[]): Line[] => {
+/**
+ * The question on a clean screen, under whatever was just said. With `wait`
+ * it stays dark for that long, while the lines above play out.
+ */
+const screen = (game: Game, above: readonly Line[], wait = 0): Line[] => {
   const { ask, options } = current(game);
   const lines: Line[] = [
     ...above,
-    line(
-      { text: ` QUESTION ${game.at + 1}/${LADDER.length} `, tone: 'inverse' },
-      '  for ',
-      bright(money(sumAt(game.at))),
-      dim(`   safe: ${money(kept(game.at))}`),
-    ),
-    blank(),
-    line(ask),
-    blank(),
-    ...options.map((text, index) => optionRow(text, index, game.hidden.includes(index))),
-    blank(),
-    actions(game),
+    ...later(wait, [
+      line(
+        { text: ` QUESTION ${game.at + 1}/${LADDER.length} `, tone: 'inverse' },
+        '  for ',
+        bright(money(sumAt(game.at))),
+        dim(`   safe: ${money(kept(game.at))}`),
+      ),
+      blank(),
+      line(ask),
+      blank(),
+      ...options.map((text, index) => optionRow(text, index, game.hidden.includes(index))),
+      blank(),
+      actions(game),
+    ]),
   ];
   const [top, ...rest] = lines;
   return top ? [{ ...top, clear: true }, ...rest] : [];
 };
 
-const ask = (game: Game, above: readonly Line[]): SessionStep => ({
-  lines: screen(game, above),
+const ask = (game: Game, above: readonly Line[], wait = 0): SessionStep => ({
+  lines: screen(game, above, wait),
   next: round(game),
 });
 
+/** A row that counts dots after `lead` before it turns into `verdict`. */
+const suspense = (lead: readonly Span[], verdict: Line): Line => ({
+  ...verdict,
+  frames: DOTS.map((dots) => ({ spans: [...lead, dim(dots)], ms: DOT_MS })),
+});
+
+const finalAnswer = (choice: number, verdict: Line): Line =>
+  suspense([dim('Final answer: '), bright(letter(choice))], verdict);
+
+/** Money falling down the screen, for as long as the winner cares to watch. */
+const rain = (random: () => number): Line[] => {
+  const drop = (): string => {
+    const roll = random();
+    return roll < 0.08 ? '$' : roll < 0.14 ? '*' : roll < 0.2 ? '.' : ' ';
+  };
+  const patterns = Array.from({ length: RAIN.patterns }, () =>
+    Array.from({ length: RAIN.width }, drop).join(''),
+  );
+  // Every frame each pattern is one row lower.
+  const at = (frame: number, row: number): Span =>
+    bright(patterns[(row - frame + RAIN.patterns) % RAIN.patterns] ?? '');
+
+  return Array.from({ length: RAIN.rows }, (_, row) => ({
+    spans: [at(0, row)],
+    frames: patterns.map((_, frame) => ({ spans: [at(frame, row)], ms: RAIN.ms })),
+    loop: true,
+    art: true,
+  }));
+};
+
 const replay = ({ topic }: Game): Line => playAgain(`millionaire ${topic.key}`);
 
-const lose = (game: Game): SessionStep => {
+const lose = (game: Game, choice: number): SessionStep => {
   const question = current(game);
   return {
     lines: [
-      line('Wrong. The answer was ', bright(answerText(question)), '.'),
-      line(dim(question.why)),
-      blank(),
-      line('You leave with ', bright(money(kept(game.at))), '.'),
-      blank(),
-      replay(game),
+      finalAnswer(choice, line('Wrong. The answer was ', bright(answerText(question)), '.')),
+      ...later(SUSPENSE_MS, [
+        line(dim(question.why)),
+        blank(),
+        line('You leave with ', bright(money(kept(game.at))), '.'),
+        blank(),
+        replay(game),
+      ]),
     ],
   };
 };
@@ -201,34 +248,35 @@ const walk = (game: Game): SessionStep => {
   };
 };
 
-const win = (game: Game): SessionStep => ({
+const win = (game: Game, choice: number): SessionStep => ({
   lines: [
-    line(bright('Correct. '), current(game).why),
-    blank(),
-    heading('millionaire'),
-    line(
-      bright(money(sumAt(LADDER.length - 1))),
-      `. All ${LADDER.length}, in ${game.topic.title}.`,
-    ),
-    blank(),
-    line(dim('The author answers these for a living: '), action('contact')),
-    replay(game),
+    finalAnswer(choice, line(bright('Correct. '), current(game).why)),
+    ...later(SUSPENSE_MS, [
+      blank(),
+      ...rain(game.random),
+      heading('millionaire'),
+      line(
+        bright(money(sumAt(LADDER.length - 1))),
+        `. All ${LADDER.length}, in ${game.topic.title}.`,
+      ),
+      blank(),
+      line(dim('The author answers these for a living: '), action('contact')),
+      replay(game),
+    ]),
   ],
 });
 
-const correct = (game: Game): SessionStep => {
-  if (game.at === LADDER.length - 1) return win(game);
+const correct = (game: Game, choice: number): SessionStep => {
+  if (game.at === LADDER.length - 1) return win(game, choice);
 
   const safe = SAFE.some((index) => index === game.at);
   const next: Game = { ...game, at: game.at + 1, hidden: [] };
-  return ask(next, [
-    line(
-      bright('Correct. '),
-      current(game).why,
-      ...(safe ? [bright(` ${money(sumAt(game.at))} is now safe.`)] : []),
-    ),
-    blank(),
-  ]);
+  const verdict = line(
+    bright('Correct. '),
+    current(game).why,
+    ...(safe ? [bright(` ${money(sumAt(game.at))} is now safe.`)] : []),
+  );
+  return ask(next, [finalAnswer(choice, verdict), blank()], SUSPENSE_MS);
 };
 
 /** The options still on the board that are wrong. */
@@ -255,10 +303,13 @@ const fifty = (game: Game): SessionStep => {
 const call = (game: Game): SessionStep => {
   const { tier, right } = current(game);
   const said = game.random() < SENIOR_RIGHT[tier] ? right : pick(game.random, wrongOnes(game));
-  return ask(spend(game, 'call'), [
-    line(dim('A senior picks up: '), `"${SENIOR_SAYS[tier]} `, bright(letter(said)), '."'),
-    blank(),
-  ]);
+  const advice = line(
+    dim('A senior picks up: '),
+    `"${SENIOR_SAYS[tier]} `,
+    bright(letter(said)),
+    '."',
+  );
+  return ask(spend(game, 'call'), [suspense([dim('Calling a senior')], advice), blank()]);
 };
 
 /** Shares of the vote in percent, one per option; they add up to 100. */
@@ -282,12 +333,17 @@ const poll = (game: Game): SessionStep => {
   const rows = shares.flatMap((share, index): Line[] => {
     if (game.hidden.includes(index)) return [];
     const filled = Math.round((share / 100) * BAR);
+    const bar = (length: number): string => `${'#'.repeat(length)}${'.'.repeat(BAR - length)}`;
+    const name = `  ${letter(index)}  `;
     return [
-      line(
-        `  ${letter(index)}  `,
-        `${'#'.repeat(filled)}${'.'.repeat(BAR - filled)}`,
-        `  ${share}%`,
-      ),
+      {
+        ...line(name, bar(filled), `  ${share}%`),
+        // The votes come in: the bar grows, the figure shows once it has stopped.
+        frames: Array.from({ length: VOTE_STEPS }, (_, step) => ({
+          spans: [{ text: name }, { text: bar(Math.round((filled * step) / VOTE_STEPS)) }],
+          ms: VOTE_MS,
+        })),
+      },
     ];
   });
   return ask(spend(game, 'poll'), [line(dim('The audience votes:')), ...rows, blank()]);
@@ -333,7 +389,7 @@ const round = (game: Game): Session => ({
       return again('Answer A, B, C or D; or `50:50`, `call`, `poll`, `walk`.');
     }
     if (game.hidden.includes(choice)) return again('That answer is gone.');
-    return choice === current(game).right ? correct(game) : lose(game);
+    return choice === current(game).right ? correct(game, choice) : lose(game, choice);
   },
 });
 

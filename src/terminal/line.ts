@@ -40,8 +40,19 @@ export interface Span {
   indent?: number;
 }
 
-export interface Line {
+/** One step of a row's animation: what the row shows, and for how long. */
+export interface Frame {
   spans: readonly Span[];
+  ms: number;
+}
+
+export interface Line {
+  /** What the row says; an animated row settles on this once its frames have played. */
+  spans: readonly Span[];
+  /** Animation: shown one after another, in place, before the row settles on `spans`. */
+  frames?: readonly Frame[];
+  /** Plays `frames` over and over instead of settling. */
+  loop?: boolean;
   /** Hanging indent in characters, applied to wrapped rows. */
   hang?: number;
   /** Milliseconds to wait before this line is printed. */
@@ -102,5 +113,30 @@ export const art = (source: string): Line[] =>
 /** Returns a copy of `lines` whose rows are printed `delay` ms apart. */
 export const paced = (lines: readonly Line[], delay: number): Line[] =>
   lines.map((entry) => ({ ...entry, delay }));
+
+/**
+ * Animates a block of rows in place: it plays the `scenes`, each a full
+ * picture of the same rows, and settles on `lines`.
+ */
+export const animated = (
+  lines: readonly Line[],
+  scenes: readonly { lines: readonly Line[]; ms: number }[],
+): Line[] =>
+  scenes.length === 0
+    ? [...lines]
+    : lines.map((entry, row) => ({
+        ...entry,
+        frames: scenes.map((scene) => ({ spans: scene.lines[row]?.spans ?? [], ms: scene.ms })),
+      }));
+
+/** Keeps rows blank for `ms` before they show: timing without holding up the prompt. */
+export const later = (ms: number, lines: readonly Line[]): Line[] =>
+  ms <= 0
+    ? [...lines]
+    : lines.map((entry) => ({ ...entry, frames: [{ spans: [], ms }, ...(entry.frames ?? [])] }));
+
+/** How long a row's animation runs, in milliseconds. */
+export const playtime = ({ frames = [] }: Line): number =>
+  frames.reduce((total, { ms }) => total + ms, 0);
 
 export const toPlainText = (entry: Line): string => entry.spans.map((part) => part.text).join('');

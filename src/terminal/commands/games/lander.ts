@@ -1,4 +1,4 @@
-import { blank, bright, dim, line } from '../../line';
+import { animated, blank, bright, dim, later, line, playtime } from '../../line';
 import type { Line } from '../../line';
 import type { Command, Session, SessionStep } from '../types';
 import { playAgain, quitHint } from './shared';
@@ -73,18 +73,64 @@ const status = ({ time, altitude, velocity, fuel }: Craft): Line =>
 
 const outcome = (speed: number): string => {
   if (speed <= 2) return 'Perfect touchdown. The crew will buy you a drink.';
-  if (speed <= 5) return 'Good landing. A few bruises, nothing a report cannot fix.';
-  if (speed <= 10) return 'Hard landing. The craft is damaged, but everyone walks away.';
+  if (speed <= HARD) return 'Good landing. A few bruises, nothing a report cannot fix.';
+  if (speed <= FATAL) return 'Hard landing. The craft is damaged, but everyone walks away.';
   return `No survivors. You dug a new crater ${(speed * 0.4).toFixed(1)} m deep.`;
 };
 
-const landing = (speed: number, time: number): Line[] => [
-  blank(),
-  line('Contact at ', bright(`${speed.toFixed(2)} m/s`), dim(` after ${time.toFixed(1)} s.`)),
-  line(outcome(speed)),
-  blank(),
-  playAgain('lander'),
-];
+/** Speeds above these break the craft, and destroy it. */
+const HARD = 5;
+const FATAL = 10;
+
+const SKY = 4;
+const GROUND = '_'.repeat(21);
+const CRAFT = ['  /^\\  ', ' /___\\ ', ' /   \\ '] as const;
+const BENT = ['        ', '  /^\\_ ', ' /__/ \\_'] as const;
+const BLAST = ['  \\ | /  ', ' -- * -- ', '  / | \\  '] as const;
+const DEBRIS = ['         ', '  .   ,  ', " , .  ' . "] as const;
+const DESCENT_MS = 170;
+const BLAST_MS = 260;
+
+/** The landing site with `shape` standing `top` rows down from the top of the picture. */
+const site = (shape: readonly string[], top: number, ground = GROUND): Line[] =>
+  [
+    ...Array.from(
+      { length: SKY + shape.length - 1 },
+      (_, row) => `      ${shape[row - top] ?? ''}`,
+    ),
+    ground,
+  ].map((text) => ({ spans: [{ text }], art: true }));
+
+/** The last seconds of the descent: the craft comes down, and stands, bends or blows up. */
+const touchdown = (speed: number): Line[] => {
+  const descent = Array.from({ length: SKY }, (_, top) => ({
+    lines: site(CRAFT, top),
+    ms: DESCENT_MS,
+  }));
+  const down = SKY - 1;
+  if (speed <= HARD) return animated(site(CRAFT, down), descent);
+  if (speed <= FATAL) return animated(site(BENT, down), descent);
+  const crater = `${GROUND.slice(0, 8)}\\___/${GROUND.slice(13)}`;
+  return animated(site(DEBRIS, down, crater), [
+    ...descent,
+    { lines: site(BLAST, down), ms: BLAST_MS },
+  ]);
+};
+
+const landing = (speed: number, time: number): Line[] => {
+  const picture = touchdown(speed);
+  return [
+    blank(),
+    ...picture,
+    // The verdict waits for the craft to reach the ground.
+    ...later(Math.max(...picture.map(playtime)), [
+      line('Contact at ', bright(`${speed.toFixed(2)} m/s`), dim(` after ${time.toFixed(1)} s.`)),
+      line(outcome(speed)),
+      blank(),
+      playAgain('lander'),
+    ]),
+  ];
+};
 
 const turn = (craft: Craft): Session => ({
   prompt: craft.fuel > 0 ? `burn 0-${MAX_BURN}>` : 'falling, press Enter>',

@@ -1,11 +1,35 @@
+import { useEffect, useState } from 'react';
 import type { CSSProperties, MouseEvent } from 'react';
+import { REDUCED_MOTION_QUERY, useMediaQuery } from '../hooks/useMediaQuery';
 import type { Line, Span } from '../terminal/line';
 import styles from './Terminal.module.css';
 
 interface OutputLineProps {
   line: Line;
   onCommand: (command: string) => void;
+  /** Shows an animated row as it ends up, e.g. in the afterimage of a wiped screen. */
+  still?: boolean;
 }
+
+/**
+ * The spans a row shows right now: the current frame of its animation, or the
+ * row itself once the frames have played (or at once, for visitors who asked
+ * for reduced motion).
+ */
+const useFrames = ({ spans, frames, loop = false }: Line, still: boolean): readonly Span[] => {
+  const [at, setAt] = useState(0);
+  const reduced = useMediaQuery(REDUCED_MOTION_QUERY);
+  const count = frames?.length ?? 0;
+  const frame = still || reduced ? undefined : frames?.[at];
+
+  useEffect(() => {
+    if (!frame) return undefined;
+    const timer = setTimeout(() => setAt(loop ? (at + 1) % count : at + 1), frame.ms);
+    return () => clearTimeout(timer);
+  }, [frame, at, loop, count]);
+
+  return frame?.spans ?? spans;
+};
 
 const classNames = (...names: (string | false | undefined)[]): string =>
   names.filter(Boolean).join(' ');
@@ -58,8 +82,9 @@ function SpanView({ span, onCommand }: { span: Span; onCommand: (command: string
   );
 }
 
-export function OutputLine({ line, onCommand }: OutputLineProps) {
+export function OutputLine({ line, onCommand, still = false }: OutputLineProps) {
   const { command } = line;
+  const spans = useFrames(line, still);
 
   // Buttons and links inside the row handle their own clicks.
   const handleRowClick = (event: MouseEvent<HTMLDivElement>): void => {
@@ -102,7 +127,7 @@ export function OutputLine({ line, onCommand }: OutputLineProps) {
         line.nowrap && styles.nowrap,
         command && styles.row,
         Boolean(line.hang) && styles.hang,
-        line.spans.some((span) => span.breakBelow) && styles.stack,
+        spans.some((span) => span.breakBelow) && styles.stack,
       )}
       style={line.hang ? hangingIndent(line.hang) : undefined}
       aria-hidden={line.art}
@@ -110,7 +135,7 @@ export function OutputLine({ line, onCommand }: OutputLineProps) {
       data-command={command}
       onClick={command ? handleRowClick : undefined}
     >
-      {line.spans.map((span, index) => (
+      {spans.map((span, index) => (
         <SpanView key={index} span={span} onCommand={onCommand} />
       ))}
     </div>

@@ -5,14 +5,14 @@
  * in `arena`; this file runs the evening.
  */
 import { profile } from '../../../../content/resume';
-import { action, blank, bright, bullet, dim, heading, line } from '../../../line';
+import { action, animated, blank, bright, bullet, dim, heading, later, line } from '../../../line';
 import type { Line, Span } from '../../../line';
 import type { Command, Session, SessionStep } from '../../types';
 import { pick, playAgain, quitHint, randomInt } from '../shared';
 import { arena } from './arena';
-import type { Combatant } from './arena';
+import type { Combatant, Pose, Poses } from './arena';
 import { STAT_LABELS, ZONES, blockName, maxHealth, strike, withBonuses, zoneName } from './combat';
-import type { Blow, Stats, Zone } from './combat';
+import type { Blow, BlowKind, Stats, Zone } from './combat';
 import { HERO, HERO_STAT_SOURCES, RIVALS, STARTING_ITEMS } from './roster';
 import type { Item, Rival } from './roster';
 
@@ -82,10 +82,93 @@ const zoneButtons = (verb: 'hit' | 'block', label: (zone: Zone) => string): Line
 
 const controls = (): Line[] => [zoneButtons('hit', zoneName), zoneButtons('block', blockName)];
 
+/** One moment of the animated ring. */
+interface Scene {
+  hero: Combatant;
+  rival: Combatant;
+  poses?: Poses;
+  ms: number;
+}
+
+/** How the ring gets to the picture it ends on. */
+interface Show {
+  scenes: readonly Scene[];
+  /** The poses it ends in, e.g. the loser on the floor. */
+  poses?: Poses;
+}
+
+const STILL: Show = { scenes: [] };
+
+/** Columns a fighter lunges forward, in two steps, and what each moment lasts. */
+const LUNGE = 6;
+const STEP_MS = 80;
+const IMPACT_MS = 420;
+/** When a blow lands, counted from the start of the swing; and the whole swing. */
+const IMPACT_AT = STEP_MS * 2;
+const SWING_MS = IMPACT_AT + IMPACT_MS + STEP_MS;
+const KNOCKOUT_MS = 500;
+const KNOCKED_OUT: Pose = { down: true, note: 'K.O.' };
+/** Columns a new rival walks in from, and the time each step takes. */
+const WALK_IN = [8, 6, 4, 2] as const;
+const WALK_MS = 90;
+
+const runtime = ({ scenes }: Show): number => scenes.reduce((total, { ms }) => total + ms, 0);
+
 /** The ring on a clean screen, what just happened under it. */
-const ring = ({ stage, hero, rival }: Bout, log: readonly Line[]): Line[] => {
-  const [top, ...rest] = arena(hero, rival, `CANDIDATE ${stage + 1}/${RIVALS.length}`);
+const ring = (
+  { stage, hero, rival }: Bout,
+  log: readonly Line[],
+  { scenes, poses }: Show = STILL,
+): Line[] => {
+  const title = `CANDIDATE ${stage + 1}/${RIVALS.length}`;
+  const [top, ...rest] = animated(
+    arena(hero, rival, title, poses),
+    scenes.map((scene) => ({
+      lines: arena(scene.hero, scene.rival, title, scene.poses),
+      ms: scene.ms,
+    })),
+  );
   return [...(top ? [{ ...top, clear: true }] : []), ...rest, ...log];
+};
+
+const SHOUTS: Readonly<Record<BlowKind, (blow: Blow) => string>> = {
+  dodged: () => 'MISS',
+  blocked: () => 'BLOCK',
+  hit: ({ damage }) => `-${damage}`,
+  pierced: ({ damage }) => `-${damage}`,
+  critical: ({ damage }) => `CRIT! -${damage}`,
+};
+
+/** How the one who is hit takes it; `away` is the direction of "back". */
+const reaction = (blow: Blow, away: 1 | -1): Pose => ({
+  note: SHOUTS[blow.kind](blow),
+  shift: blow.kind === 'dodged' ? away * 4 : blow.damage > 0 ? away * 2 : 0,
+});
+
+/**
+ * One swing: the attacker lunges, the blow lands and the health of the one
+ * hit drops, the attacker steps back.
+ */
+const swing = (
+  attacker: keyof Poses,
+  blow: Blow,
+  before: Bout,
+  after: Bout,
+  knockout: boolean,
+): Scene[] => {
+  const victim = attacker === 'hero' ? 'rival' : 'hero';
+  const forward = attacker === 'hero' ? 1 : -1;
+  const lunge = (step: number): Pose => ({ shift: (forward * LUNGE * step) / 2 });
+  const took = reaction(blow, forward);
+  const { hero, rival } = after;
+
+  return [
+    { ...before, poses: { [attacker]: lunge(1) }, ms: STEP_MS },
+    { ...before, poses: { [attacker]: lunge(2) }, ms: STEP_MS },
+    { hero, rival, poses: { [attacker]: lunge(2), [victim]: took }, ms: IMPACT_MS },
+    { hero, rival, poses: { [attacker]: lunge(1), [victim]: { note: took.note } }, ms: STEP_MS },
+    ...(knockout ? [{ hero, rival, poses: { [victim]: { note: 'K.O.' } }, ms: KNOCKOUT_MS }] : []),
+  ];
 };
 
 const damage = (blow: Blow): Span => bright(`  -${blow.damage} HP`);
@@ -133,39 +216,45 @@ const rivalBlow = (blow: Blow, move: string, rival: string, zone: Zone): Line =>
 
 const firstName = profile.name.split(' ')[0] ?? profile.name;
 
-const offer = (bout: Bout, log: readonly Line[]): SessionStep => ({
+const offer = (bout: Bout, log: readonly Line[], show: Show): SessionStep => ({
   lines: [
-    ...ring(bout, log),
-    line(bright(bout.rival.fighter.name), ` ${rivalAt(bout.stage).defeat}`),
-    blank(),
-    heading('offer'),
-    line(`"Dear ${firstName}, the other candidates are no longer available. When can you start?"`),
-    blank(),
-    line(
-      dim('The real one hits deadlines just as hard, and needs no rubber duck: '),
-      action('contact'),
-    ),
-    playAgain('fight'),
+    ...ring(bout, log, show),
+    ...later(runtime(show), [
+      line(bright(bout.rival.fighter.name), ` ${rivalAt(bout.stage).defeat}`),
+      blank(),
+      heading('offer'),
+      line(
+        `"Dear ${firstName}, the other candidates are no longer available. When can you start?"`,
+      ),
+      blank(),
+      line(
+        dim('The real one hits deadlines just as hard, and needs no rubber duck: '),
+        action('contact'),
+      ),
+      playAgain('fight'),
+    ]),
   ],
 });
 
-const rejection = (bout: Bout, log: readonly Line[]): SessionStep => ({
+const rejection = (bout: Bout, log: readonly Line[], show: Show): SessionStep => ({
   lines: [
-    ...ring(bout, log),
-    blank(),
-    heading('rejected'),
-    line(
-      '"Thank you for your interest. We have decided to move forward with ',
-      bright(bout.rival.fighter.name),
-      '. We will keep your résumé on file."',
-    ),
-    blank(),
-    playAgain('fight'),
+    ...ring(bout, log, show),
+    ...later(runtime(show), [
+      blank(),
+      heading('rejected'),
+      line(
+        '"Thank you for your interest. We have decided to move forward with ',
+        bright(bout.rival.fighter.name),
+        '. We will keep your résumé on file."',
+      ),
+      blank(),
+      playAgain('fight'),
+    ]),
   ],
 });
 
 /** Between bouts: the loot, a coffee, and a look at who is next. */
-const interval = (bout: Bout, log: readonly Line[]): SessionStep => {
+const interval = (bout: Bout, log: readonly Line[], show: Show): SessionStep => {
   const beaten = rivalAt(bout.stage);
   const items = beaten.loot ? [...bout.items, beaten.loot] : bout.items;
   const stats = heroWith(items);
@@ -177,17 +266,19 @@ const interval = (bout: Bout, log: readonly Line[]): SessionStep => {
 
   return {
     lines: [
-      ...ring(bout, log),
-      line(bright(beaten.name), ` ${beaten.defeat}`),
-      ...(beaten.loot ? [line(dim('You pick up:')), itemRow(beaten.loot)] : []),
-      line(dim(`A coffee break restores ${rest} HP.`)),
-      blank(),
-      line(
-        dim('Next in line: '),
-        bright(upcoming.name),
-        dim(`, ${upcoming.tagline.toLowerCase()}. `),
-        action('next', 'Bring them in >'),
-      ),
+      ...ring(bout, log, show),
+      ...later(runtime(show), [
+        line(bright(beaten.name), ` ${beaten.defeat}`),
+        ...(beaten.loot ? [line(dim('You pick up:')), itemRow(beaten.loot)] : []),
+        line(dim(`A coffee break restores ${rest} HP.`)),
+        blank(),
+        line(
+          dim('Next in line: '),
+          bright(upcoming.name),
+          dim(`, ${upcoming.tagline.toLowerCase()}. `),
+          action('next', 'Bring them in >'),
+        ),
+      ]),
     ],
     next: {
       prompt: 'press Enter>',
@@ -196,11 +287,21 @@ const interval = (bout: Bout, log: readonly Line[]): SessionStep => {
   };
 };
 
-/** A new rival steps in. */
-const entrance = (bout: Bout): SessionStep => ({
-  lines: [...ring(bout, [line(dim(rivalAt(bout.stage).tell))]), blank(), ...controls()],
-  next: round(bout),
-});
+/** A new rival walks in from the far side of the ring. */
+const entrance = (bout: Bout): SessionStep => {
+  const { hero, rival } = bout;
+  const show: Show = {
+    scenes: WALK_IN.map((shift) => ({ hero, rival, poses: { rival: { shift } }, ms: WALK_MS })),
+  };
+  return {
+    lines: [
+      ...ring(bout, later(runtime(show), [line(dim(rivalAt(bout.stage).tell))]), show),
+      blank(),
+      ...controls(),
+    ],
+    next: round(bout),
+  };
+};
 
 /** One exchange: the hero strikes first, the rival answers if still standing. */
 const exchange = (bout: Bout, hit: Zone, block: Zone): SessionStep => {
@@ -211,24 +312,35 @@ const exchange = (bout: Bout, hit: Zone, block: Zone): SessionStep => {
   const guard = randomInt(random, 0, lastZone);
 
   const mine = strike(hero.stats, rival.stats, hit, guard, random);
-  const log = [heroBlow(mine, pick(random, HERO.moves), name, hit)];
+  // Each line of the log shows as its blow lands.
+  const log = later(IMPACT_AT, [heroBlow(mine, pick(random, HERO.moves), name, hit)]);
   const struck: Bout = {
     ...bout,
     rival: { ...rival, health: Math.max(0, rival.health - mine.damage) },
   };
-  if (struck.rival.health === 0) {
-    return bout.stage === RIVALS.length - 1 ? offer(struck, log) : interval(struck, log);
+  const won = struck.rival.health === 0;
+  const first = swing('hero', mine, bout, struck, won);
+  if (won) {
+    const show: Show = { scenes: first, poses: { rival: KNOCKED_OUT } };
+    return bout.stage === RIVALS.length - 1
+      ? offer(struck, log, show)
+      : interval(struck, log, show);
   }
 
   const theirs = strike(rival.stats, hero.stats, aim, block, random);
-  log.push(rivalBlow(theirs, pick(random, moves), name, aim));
+  log.push(...later(SWING_MS + IMPACT_AT, [rivalBlow(theirs, pick(random, moves), name, aim)]));
   const answered: Bout = {
     ...struck,
     hero: { ...hero, health: Math.max(0, hero.health - theirs.damage) },
   };
-  if (answered.hero.health === 0) return rejection(answered, log);
+  const lost = answered.hero.health === 0;
+  const scenes = [...first, ...swing('rival', theirs, struck, answered, lost)];
+  if (lost) return rejection(answered, log, { scenes, poses: { hero: KNOCKED_OUT } });
 
-  return { lines: [...ring(answered, log), blank(), ...controls()], next: round(answered) };
+  return {
+    lines: [...ring(answered, log, { scenes }), blank(), ...controls()],
+    next: round(answered),
+  };
 };
 
 const toZone = (word: string): Zone | undefined => {

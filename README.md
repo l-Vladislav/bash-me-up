@@ -60,6 +60,10 @@ guest@larionov:~$ games
 - `millionaire` is the TV quiz with questions on system design, Node.js, Python and C#:
   fifteen of them, three lifelines, and an explanation after every answer. New questions go
   into `src/terminal/commands/games/millionaire/topics/`.
+- The games are animated in plain ASCII: fighters lunge and fall, the lander comes down (or
+  apart), the quiz makes you wait for the verdict. A row of output may carry _frames_ that play in
+  place before it settles, so the animations are data too, and stay still under
+  `prefers-reduced-motion`.
 - Deep links: [`?run=projects`](https://l-vladislav.github.io/bash-me-up/?run=projects) opens the
   site and types the command for you.
 
