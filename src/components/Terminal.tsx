@@ -43,9 +43,12 @@ export function Terminal({ shell, disabled = false }: TerminalProps) {
   // Any key skips a printout in progress; otherwise typing anywhere lands in the prompt.
   const handleKeyDown = useEffectEvent((event: KeyboardEvent): void => {
     if (disabled || event.ctrlKey || event.metaKey || event.altKey) return;
-    if (event.target instanceof Element && event.target.closest('button, a, [role="slider"]')) {
-      return;
-    }
+    // On a button, link or knob, Enter, Space, the arrows and Tab still work that
+    // control; a letter means the visitor is typing a command, so it goes to the prompt.
+    const onControl =
+      event.target instanceof Element && event.target.closest('button, a, [role="slider"]');
+    const typing = event.key.length === 1 && event.key !== ' ';
+    if (onControl && !typing) return;
     if (event.key === 'PageDown' && paging) {
       event.preventDefault();
       pager.next();
