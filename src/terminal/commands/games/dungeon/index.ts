@@ -194,7 +194,19 @@ export const view = (delve: Delve): Scene => {
   }
 
   const [left = false, ahead = false, right = false] = openings({ ...delve, at: next });
+  // A chest or the fountain in the alcove ahead is seen from a step away, not just from on top of it.
+  if (!left && !ahead && !right && beyond === CHEST) return 'chest';
+  if (!left && !ahead && !right && beyond === FOUNTAIN) return 'fountain';
   return SHAPES[[left, ahead, right].map(Number).join('')] ?? 'dead-end';
+};
+
+/** The way the corridor leads from here, in words; the picture shows only what is ahead. */
+const ways = (delve: Delve): string => {
+  const open = openings(delve);
+  const leading = WAYS.filter((_, index) => open[index]);
+  return leading.length === 0
+    ? 'A dead end. The only way is back.'
+    : `The way leads ${listed(leading)}.`;
 };
 
 const listed = (items: readonly string[]): string =>
@@ -208,19 +220,21 @@ const describe = (delve: Delve, scene: Scene): string => {
         : 'A heavy door bars the way. It is locked.';
     case 'stairs':
       return 'Stairs, and daylight at the top of them.';
-    case 'chest':
-      return isOpened(delve, delve.at)
-        ? 'The chest stands open and empty.'
-        : 'A chest, and nobody guarding it.';
+    case 'chest': {
+      const there = tileAt(delve.at) === CHEST ? delve.at : towards(delve.at, delve.facing);
+      const near = there === delve.at ? '' : ` ${ways(delve)}`;
+      return isOpened(delve, there)
+        ? `The chest stands open and empty.${near}`
+        : `A chest, and nobody guarding it.${near}`;
+    }
     case 'fountain':
-      return 'Cold, clear water runs into a stone basin.';
+      return tileAt(delve.at) === FOUNTAIN
+        ? 'Cold, clear water runs into a stone basin.'
+        : `Water runs into a stone basin ahead. ${ways(delve)}`;
     default: {
-      const open = openings(delve);
-      const ways = WAYS.filter((_, index) => open[index]);
-      const shape =
-        ways.length === 0 ? 'A dead end. The only way is back.' : `The way leads ${listed(ways)}.`;
-      const stirring = open[1] && lurking(delve, towards(delve.at, delve.facing));
-      return stirring ? `${shape} Something moves in the dark ahead.` : shape;
+      const ahead = towards(delve.at, delve.facing);
+      const stirring = passable(delve, ahead) && lurking(delve, ahead);
+      return stirring ? `${ways(delve)} Something moves in the dark ahead.` : ways(delve);
     }
   }
 };
@@ -331,7 +345,7 @@ const leads = (delve: Delve, turn: Turn): boolean =>
 
 /** The moves that lead somewhere from here, as buttons. */
 const controls = (delve: Delve, fighting: boolean): Line => {
-  if (fighting) return buttons(['attack', ...(delve.potions > 0 ? ['drink'] : []), 'flee']);
+  if (fighting) return buttons(['attack', ...(quaffed(delve) ? ['drink'] : []), 'flee']);
 
   const here = tileAt(delve.at);
   const ahead = tileAt(towards(delve.at, delve.facing)) !== WALL;
@@ -596,7 +610,8 @@ const explore = (delve: Delve): Session => ({
       case 'drink':
         return drink(delve);
       case 'map':
-        return survey(delve);
+        // The map again closes it, back to the scene it stood in for.
+        return delve.showing === 'map' ? show(delve) : survey(delve);
       default:
         return hint(delve, 'Try forward, left, right, back, open, drink or map. Or click them.');
     }

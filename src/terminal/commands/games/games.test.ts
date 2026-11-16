@@ -631,6 +631,24 @@ describe('dungeon', () => {
     expect(ahead(delve(lucky, '2forward 2attack 3forward'))).toBeGreaterThan(0);
   });
 
+  it('shows a chest or the fountain from a step away, not only from on top of it', () => {
+    const chest = delve(lucky, 'right 6forward left forward 3attack forward');
+    expect(pictures(chest)[0]).toBe('An iron-bound chest in an alcove');
+    expect(text(chest)).toContain('A chest, and nobody guarding it. The way leads ahead.');
+    expect(text(chest)).not.toContain('open  ');
+
+    const fountain = delve(lucky, '2forward 2attack 2forward right 3forward');
+    expect(pictures(fountain)[0]).toBe('A fountain running into a stone basin');
+    expect(text(fountain)).toContain('Water runs into a stone basin ahead.');
+  });
+
+  it('closes the map on a second map, and offers a potion in a fight only when it would help', () => {
+    expect(pictures(delve(lucky, 'map map'))[0]).toBe('A stone corridor running into the dark');
+
+    expect(text(delve(lucky, '2forward'))).toContain('attack  flee');
+    expect(text(delve(() => 0, '2forward attack'))).toContain('attack  drink  flee');
+  });
+
   it('has a prize in every chest of the plan', () => {
     const cells = PLAN.flatMap((row, y) => [...row].map((tile, x) => ({ tile, x, y })));
     for (const { tile, x, y } of cells) {

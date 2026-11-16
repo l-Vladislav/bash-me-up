@@ -270,21 +270,28 @@
 /*
  * Other ways for a picture to come on; see Motion in line.ts. They stand before
  * the rules that keep a picture still, which therefore win.
+ *
+ * All of them happen inside the picture's box, as a terminal would draw them:
+ * the new picture is painted over in bands, a step at a time, and a blow jolts
+ * the image inside its frame or flares it. The box never moves or changes size.
  */
 .motionAdvance .pictureMask {
-  animation: advance 0.45s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  /* A step: the view opens out from the middle, the way the eye goes down a corridor. */
+  animation: iris 0.42s steps(7) both;
 }
 
 .motionLeft .pictureMask {
-  animation: pan-left 0.4s ease-out both;
+  /* A turn: the new view is painted in from the side it comes from. */
+  animation: wipe-from-left 0.4s steps(12) both;
 }
 
 .motionRight .pictureMask {
-  animation: pan-right 0.4s ease-out both;
+  animation: wipe-from-right 0.4s steps(12) both;
 }
 
 .motionBack .pictureMask {
-  animation: about-turn 0.5s ease-in-out both;
+  /* About turn: painted out from a line down the middle to both edges. */
+  animation: split 0.45s steps(10) both;
 }
 
 .motionBlink .pictureMask {
@@ -292,49 +299,52 @@
 }
 
 .motionLunge .pictureMask {
-  animation: lunge 0.35s ease-out var(--after);
+  animation: lunge 0.36s steps(1) var(--after);
 }
 
 .motionClash .pictureMask {
   animation:
     struck 0.12s steps(1) 3,
-    lunge 0.35s ease-out var(--after);
+    lunge 0.36s steps(1) var(--after);
 }
 
 .motionShake .pictureMask {
-  animation: shake 0.4s linear var(--after);
+  animation: shake 0.4s steps(1) var(--after);
 }
 
-@keyframes advance {
+@keyframes iris {
   from {
-    transform: scale(0.72);
-    opacity: 0.2;
+    clip-path: inset(50% 50%);
+  }
+  to {
+    clip-path: inset(0);
   }
 }
 
-@keyframes pan-left {
+@keyframes wipe-from-left {
   from {
-    transform: translateX(-18%);
-    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0);
   }
 }
 
-@keyframes pan-right {
+@keyframes wipe-from-right {
   from {
-    transform: translateX(18%);
-    opacity: 0;
+    clip-path: inset(0 0 0 100%);
+  }
+  to {
+    clip-path: inset(0);
   }
 }
 
-@keyframes about-turn {
+@keyframes split {
   from {
-    transform: scaleX(-1);
-    opacity: 0;
+    clip-path: inset(0 50%);
   }
-
-  50% {
-    transform: scaleX(0.05);
-    opacity: 0.4;
+  to {
+    clip-path: inset(0);
   }
 }
 
@@ -344,27 +354,77 @@
   }
 }
 
+/* A dweller comes at the visitor: the picture flares and jolts inside its frame. */
 @keyframes lunge {
-  40% {
-    transform: scale(1.12);
+  0%,
+  50% {
+    background: var(--phosphor-bright);
+  }
+
+  0% {
+    -webkit-mask-position:
+      calc(50% + 6px) calc(50% - 3px),
+      0 0;
+    mask-position:
+      calc(50% + 6px) calc(50% - 3px),
+      0 0;
+  }
+
+  25% {
+    -webkit-mask-position:
+      calc(50% - 5px) calc(50% + 2px),
+      0 0;
+    mask-position:
+      calc(50% - 5px) calc(50% + 2px),
+      0 0;
+  }
+
+  50% {
+    -webkit-mask-position:
+      calc(50% + 3px) 50%,
+      0 0;
+    mask-position:
+      calc(50% + 3px) 50%,
+      0 0;
   }
 }
 
+/* A blow taken: the image slips sideways in its frame, like a picture losing sync. */
 @keyframes shake {
-  20% {
-    transform: translate(-4px, 2px);
+  0% {
+    -webkit-mask-position:
+      calc(50% - 4px) calc(50% + 2px),
+      0 0;
+    mask-position:
+      calc(50% - 4px) calc(50% + 2px),
+      0 0;
   }
 
-  40% {
-    transform: translate(4px, -2px);
+  25% {
+    -webkit-mask-position:
+      calc(50% + 4px) calc(50% - 2px),
+      0 0;
+    mask-position:
+      calc(50% + 4px) calc(50% - 2px),
+      0 0;
   }
 
-  60% {
-    transform: translate(-3px, -1px);
+  50% {
+    -webkit-mask-position:
+      calc(50% - 3px) calc(50% - 1px),
+      0 0;
+    mask-position:
+      calc(50% - 3px) calc(50% - 1px),
+      0 0;
   }
 
-  80% {
-    transform: translate(2px, 1px);
+  75% {
+    -webkit-mask-position:
+      calc(50% + 2px) calc(50% + 1px),
+      0 0;
+    mask-position:
+      calc(50% + 2px) calc(50% + 1px),
+      0 0;
   }
 }
 
