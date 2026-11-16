@@ -3,6 +3,14 @@
  * markup, which keeps them pure, serialisable and trivially testable.
  */
 
+/**
+ * How a picture comes on, other than being drawn in line by line. A view that
+ * replaces another: `advance` grows out of the distance, `left` and `right`
+ * slide in from that side, `back` swings round. A picture that stays: `blink`
+ * flickers, `lunge` jumps at the viewer, `clash` does both in turn, `shake` rattles.
+ */
+export type Motion = 'advance' | 'left' | 'right' | 'back' | 'blink' | 'lunge' | 'clash' | 'shake';
+
 export interface Picture {
   /** A mask whose alpha is the brightness; it is drawn in the phosphor colour. */
   src: string;
@@ -12,13 +20,21 @@ export interface Picture {
   /**
    * The edge it floats against, text running down the other side; `art`:
    * against the right edge beside the ASCII art printed after it, `rows` and
-   * `columns` being that art's size; or `block`, on rows of its own.
+   * `columns` being that art's size; `block`, on rows of its own; or `scene`:
+   * against the left edge where the screen is wide enough for the text beside
+   * it, on rows of its own elsewhere.
    */
-  side: 'left' | 'right' | 'art' | 'block';
+  side: 'left' | 'right' | 'art' | 'block' | 'scene';
   /** Width of the art beside it, in characters; only for `art`. */
   columns?: number;
   /** Shows at once instead of being drawn in: it was already on the screen. */
   still?: boolean;
+  /** Comes on this way instead; `still` wins over it. */
+  motion?: Motion;
+  /** Milliseconds before a `lunge` or a `shake` starts, or the lunge of a `clash`. */
+  after?: number;
+  /** Pictures likely to be asked for next; fetched ahead of time, so they show without a wait. */
+  upcoming?: readonly string[];
 }
 
 export type Tone = 'normal' | 'dim' | 'bright' | 'inverse';
@@ -69,8 +85,11 @@ export interface Line {
   echo?: boolean;
   /** A picture instead of text; the lines printed after it run down its side. */
   image?: Picture;
-  /** Shown only on wide screens, or only on narrow ones (below 46rem). */
-  screen?: 'wide' | 'narrow';
+  /**
+   * Shown only on wide screens, or only on narrow ones (below 46rem); `broad`:
+   * only where a scene leaves room for a second picture beside its text (60rem).
+   */
+  screen?: 'wide' | 'narrow' | 'broad';
 }
 
 type Part = string | Span;

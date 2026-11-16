@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { CSSProperties, MouseEvent } from 'react';
 import { REDUCED_MOTION_QUERY, useMediaQuery } from '../hooks/useMediaQuery';
-import type { Line, Span } from '../terminal/line';
+import type { Line, Motion, Span } from '../terminal/line';
 import styles from './Terminal.module.css';
 
 interface OutputLineProps {
@@ -82,9 +82,28 @@ function SpanView({ span, onCommand }: { span: Span; onCommand: (command: string
   );
 }
 
+const MOTIONS: Readonly<Record<Motion, string | undefined>> = {
+  advance: styles.motionAdvance,
+  left: styles.motionLeft,
+  right: styles.motionRight,
+  back: styles.motionBack,
+  blink: styles.motionBlink,
+  lunge: styles.motionLunge,
+  clash: styles.motionClash,
+  shake: styles.motionShake,
+};
+
+/** Fetches the pictures that may come after this one while the visitor looks at it. */
+const usePreload = (sources: readonly string[] | undefined): void => {
+  useEffect(() => {
+    for (const src of sources ?? []) new Image().src = src;
+  }, [sources]);
+};
+
 export function OutputLine({ line, onCommand, still = false }: OutputLineProps) {
   const { command } = line;
   const spans = useFrames(line, still);
+  usePreload(still ? undefined : line.image?.upcoming);
 
   // Buttons and links inside the row handle their own clicks.
   const handleRowClick = (event: MouseEvent<HTMLDivElement>): void => {
@@ -93,7 +112,7 @@ export function OutputLine({ line, onCommand, still = false }: OutputLineProps) 
   };
 
   if (line.image) {
-    const { src, alt, rows, side, columns = 0, still = false } = line.image;
+    const { src, alt, rows, side, columns = 0, still = false, motion, after = 0 } = line.image;
     // The glow sits on the wrapper: a filter on the masked element itself would be cut off.
     return (
       <div
@@ -102,12 +121,15 @@ export function OutputLine({ line, onCommand, still = false }: OutputLineProps) 
           side === 'left' && styles.pictureLeft,
           side === 'art' && styles.pictureArt,
           side === 'block' && styles.pictureBlock,
+          side === 'scene' && styles.pictureScene,
           still && styles.pictureStill,
+          !still && motion && MOTIONS[motion],
+          line.screen === 'broad' && styles.onlyBroad,
           line.screen === 'wide' && styles.onlyWide,
           line.screen === 'narrow' && styles.onlyNarrow,
         )}
         // Sizes on the wrapper: its margin needs them as much as the picture does.
-        style={{ '--rows': rows, '--cols': columns } as CSSProperties}
+        style={{ '--rows': rows, '--cols': columns, '--after': `${after}ms` } as CSSProperties}
         role="img"
         aria-label={alt}
       >

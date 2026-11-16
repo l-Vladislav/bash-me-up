@@ -3,6 +3,8 @@ import { playtime, toPlainText } from '../../line';
 import { DEFAULT_SETTINGS } from '../../settings';
 import { execute, findCommand } from '../index';
 import type { CommandContext, Session, SessionStep } from '../types';
+import { CHESTS as DUNGEON_CHESTS, MAX_HEALTH } from './dungeon/index';
+import { PLAN } from './dungeon/maze';
 import { blockedZones, strike } from './fight/combat';
 import type { Stats } from './fight/combat';
 import { choose } from './fight/index';
@@ -534,5 +536,195 @@ describe('millionaire', () => {
     );
     expect(buttons).toHaveLength(8);
     for (const button of buttons) expect(findCommand(button), button).toBeUndefined();
+  });
+});
+
+describe('dungeon', () => {
+  /** Lights the torch, then walks: a count before a word repeats it. */
+  const delve = (random: () => number, route: string): SessionStep =>
+    playThrough(start('dungeon', random), [
+      '',
+      ...route
+        .split(' ')
+        .filter(Boolean)
+        .flatMap((word) => {
+          const [, times = '1', move = ''] = /^(\d*)(.+)$/.exec(word) ?? [];
+          return Array.from({ length: Number(times || 1) }, () => move);
+        }),
+    ]);
+
+  const pictures = (step: SessionStep): string[] =>
+    step.lines.flatMap(({ image }) => (image ? [image.alt] : []));
+
+  // Every roll at its highest: the hero hits hardest and no dweller ever lands a blow.
+  const lucky = (): number => 0.99;
+  const TO_THE_KEY = 'right 6forward left forward 3attack 2forward open';
+  const TO_THE_DOOR =
+    'back 3forward right 6forward right 2forward 2attack 4forward right 4forward ' +
+    'left 2forward right forward 3attack';
+
+  it('shows the corridor ahead and the hero under it', () => {
+    const lit = delve(lucky, '');
+    expect(pictures(lit)).toEqual([
+      'A corridor running on, with an archway on the right',
+      expect.stringContaining('Portrait'),
+      'Map of the dungeon walked so far',
+    ]);
+    expect(text(lit)).toContain(`HP      [##########] ${MAX_HEALTH}/${MAX_HEALTH}`);
+    expect(text(lit)).toContain('The way leads ahead and right.');
+  });
+
+  it('turns to face a passage, never a wall, and offers only the moves that lead somewhere', () => {
+    const turned = delve(lucky, 'right');
+    expect(pictures(turned)[0]).toBe('A corridor running on, with an archway on the left');
+    expect(text(turned)).toContain('forward  left  back  map');
+
+    // The way in has rock on its left; turning back is always possible.
+    expect(text(delve(lucky, 'left'))).toBe('No way to the left: solid rock.');
+    expect(text(delve(lucky, ''))).toContain('forward  right  back  map');
+    expect(pictures(delve(lucky, 'back'))[0]).toBe('A wall ahead and an archway on the left');
+    expect(text(delve(lucky, 'back forward'))).toBe('Solid rock that way.');
+  });
+
+  it('moves the pictures: a step, a turn, a blow given and a blow taken', () => {
+    const scene = (step: SessionStep) => step.lines[0]?.image;
+    const face = (step: SessionStep) => step.lines[1]?.image;
+
+    // The first screen is drawn in line by line, portrait and all.
+    expect(scene(delve(lucky, ''))).toMatchObject({ still: false });
+    expect(scene(delve(lucky, ''))?.motion).toBeUndefined();
+    expect(scene(delve(lucky, 'forward'))?.motion).toBe('advance');
+    expect(scene(delve(lucky, 'right'))?.motion).toBe('right');
+    expect(scene(delve(lucky, 'back'))?.motion).toBe('back');
+    expect(face(delve(lucky, 'forward'))?.still).toBe(true);
+
+    // A dweller is drawn in; struck, it flickers, then lunges as its blow lands.
+    expect(scene(delve(() => 0, '2forward'))?.motion).toBeUndefined();
+    const fought = delve(() => 0, '2forward attack');
+    expect(scene(fought)).toMatchObject({ alt: 'A giant rat baring its teeth', motion: 'clash' });
+    expect(scene(fought)?.after).toBeGreaterThan(0);
+    expect(face(fought)).toMatchObject({ motion: 'shake', after: scene(fought)?.after });
+
+    // Both bars run down to where they end up: the rat's at once, the hero's with the blow.
+    const [, , , , hp, , , , rat] = fought.lines;
+    expect(hp?.frames).toHaveLength(1);
+    expect(rat?.frames).toHaveLength(2);
+    expect(hp ? playtime(hp) : 0).toBeGreaterThan(scene(fought)?.after ?? 0);
+
+    // A blow that misses moves the dweller, not the hero.
+    expect(face(delve(lucky, '2forward attack'))?.still).toBe(true);
+  });
+
+  it('names the pictures one move away, to be fetched ahead of time', () => {
+    const ahead = (step: SessionStep): number => step.lines[0]?.image?.upcoming?.length ?? 0;
+    // From the way in: the corridor a step on, and the views to the right and behind.
+    expect(ahead(delve(lucky, ''))).toBe(3);
+    // In a fight: the corridor, the same picture whether the rat falls or the hero runs, and the worst case.
+    expect(ahead(delve(lucky, '2forward'))).toBe(2);
+    expect(ahead(delve(lucky, '2forward 2attack 3forward'))).toBeGreaterThan(0);
+  });
+
+  it('has a prize in every chest of the plan', () => {
+    const cells = PLAN.flatMap((row, y) => [...row].map((tile, x) => ({ tile, x, y })));
+    for (const { tile, x, y } of cells) {
+      if (tile === 'c') expect(DUNGEON_CHESTS).toHaveProperty(`${x},${y}`);
+    }
+    expect(cells.filter(({ tile }) => tile === 'c')).toHaveLength(
+      Object.keys(DUNGEON_CHESTS).length,
+    );
+  });
+
+  it('warns of what waits in the dark, and fights it face to face', () => {
+    expect(text(delve(lucky, 'forward'))).toContain('Something moves in the dark ahead.');
+
+    const met = delve(lucky, '2forward');
+    expect(pictures(met)[0]).toBe('A giant rat baring its teeth');
+    expect(text(met)).toContain('GIANT RAT [##########] 6/6');
+
+    const won = delve(lucky, '2forward 2attack');
+    expect(text(won)).toContain('The rat squeals and lies still. +2 gold');
+    expect(pictures(won)[0]).toBe('A stone corridor running into the dark');
+  });
+
+  it('keeps the door shut until the key is found', () => {
+    const locked = delve(
+      lucky,
+      '2forward 2attack 4forward right 4forward left 2forward right forward 3attack',
+    );
+    expect(pictures(locked)[0]).toBe('A heavy wooden door at the end of the corridor');
+    expect(text(locked)).toContain('It is locked.');
+    expect(text(playThrough(locked.next ?? start('dungeon'), ['forward']))).toContain('Locked.');
+
+    const chest = delve(lucky, TO_THE_KEY);
+    expect(text(chest)).toContain('Inside: 15 gold, a healing potion and an iron key.');
+    expect(text(chest)).toContain('The chest stands open and empty.');
+  });
+
+  it('is won by climbing the stairs behind the minotaur', () => {
+    const opened = delve(lucky, `${TO_THE_KEY} ${TO_THE_DOOR} forward`);
+    expect(text(opened)).toContain('The key turns, and the door groans open.');
+
+    const stairs = delve(lucky, `${TO_THE_KEY} ${TO_THE_DOOR} forward right forward 6attack`);
+    expect(pictures(stairs)[0]).toBe('Stairs climbing towards daylight');
+
+    const out = delve(lucky, `${TO_THE_KEY} ${TO_THE_DOOR} forward right forward 6attack forward`);
+    expect(pictures(out)).toEqual(['Sunrise over the hills, seen from the mouth of a cave']);
+    expect(text(out)).toContain('DAYLIGHT.');
+    expect(text(out)).toContain('65 gold');
+    expect(out.next).toBeUndefined();
+  });
+
+  it('lets the hero run, at a price, and die of it', () => {
+    // Every roll at its lowest: the parting blow always lands, for the least damage.
+    const fled = delve(() => 0, '2forward flee');
+    expect(text(fled)).toContain('You back away, and run.');
+    expect(text(fled)).toContain(`${MAX_HEALTH - 1}/${MAX_HEALTH}`);
+    expect(pictures(fled)[0]).toBe('A stone corridor running into the dark');
+
+    const dead = delve(
+      () => 0,
+      `2forward flee ${'back forward flee '.repeat(MAX_HEALTH - 1).trim()}`,
+    );
+    expect(pictures(dead)).toEqual(['A skull and a dropped sword on the floor']);
+    expect(text(dead)).toContain('YOU DIED. The giant rat keeps the torch.');
+    expect(dead.next).toBeUndefined();
+  });
+
+  it('heals at the fountain and from the bottle, and draws the map as it goes', () => {
+    const hurt = '2forward flee back forward flee';
+    const potion = delve(() => 0, `${hurt} drink`);
+    expect(text(potion)).toContain(`${MAX_HEALTH}/${MAX_HEALTH}`);
+    expect(text(potion)).toContain('POTIONS 0');
+
+    expect(text(delve(lucky, '2forward 2attack 2forward right 4forward drink'))).toContain(
+      'You drink from the fountain',
+    );
+  });
+
+  it('draws the map as a picture of what was walked and seen, and no more', () => {
+    const drawn = (step: SessionStep, at = 0): string =>
+      decodeURIComponent(step.lines[at]?.image?.src.split(',')[1] ?? '');
+    const walls = (svg: string): number => svg.split('opacity="0.9"').length - 1;
+
+    // In the corner of a broad screen, at every step.
+    const lit = delve(lucky, '');
+    expect(lit.lines[2]).toMatchObject({ screen: 'broad', image: { side: 'right' } });
+    // The way in, the two cells seen from it, and the rock that closes them in.
+    expect(walls(drawn(lit, 2))).toBe(10);
+    expect(drawn(lit, 2).split('opacity="0.3"')).toHaveLength(2);
+    expect(drawn(lit, 2).split('opacity="0.12"')).toHaveLength(3);
+
+    // In place of the scene on `map`; it grows with every step and never shows the unseen.
+    const map = delve(lucky, 'forward map');
+    expect(pictures(map)[0]).toBe('Map of the dungeon walked so far');
+    expect(walls(drawn(map))).toBeGreaterThan(walls(drawn(lit, 2)));
+    expect(drawn(map)).not.toContain('<circle');
+    expect(drawn(delve(lucky, '2forward 2attack 2forward right 4forward map'))).toContain(
+      '<circle',
+    );
+
+    // Any move brings the scene back.
+    const on = playThrough(map.next ?? start('dungeon'), ['back']);
+    expect(pictures(on)[0]).toBe('A stone corridor running into the dark');
   });
 });

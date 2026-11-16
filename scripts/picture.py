@@ -2,6 +2,7 @@
 
     python -I scripts/picture.py <photo> <album>/<name> [--size 160] [--square]
                                  [--black N] [--white N] [--gamma 1.5] [--warm]
+                                 [--levels N] [--mirror] [--root gallery]
                                  [--preview DIR]
 
 Writes src/assets/gallery/<album>/<name>.png, and <name>.preview.png (amber on
@@ -15,7 +16,12 @@ and white; --black and --white (0-255) fix them instead. --gamma sets the
 mid-tones: the default 1.5 keeps them dim, so a bright sky does not turn into a
 flat slab of light; below 1 lifts them, for a dark subject. --warm keeps warm
 colours (skin) and fades cool greys, which drops a plain studio backdrop out of
-a portrait. --square crops a square from the top centre, where a face usually
+a portrait. --levels keeps that many shades (2-16) instead of 256: a drawing
+needs no more than 8, and the file is a third of the size. --mirror flips the
+picture left to right, and --root names another folder of src/assets to write
+into: the scenes of the `dungeon` game are made with `--root dungeon --size 192
+--levels 8`, a passage on the right being one on the left, mirrored.
+--square crops a square from the top centre, where a face usually
 is; otherwise the photo keeps its proportions.
 """
 
@@ -25,7 +31,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageFilter, ImageOps
 
-GALLERY = Path(__file__).resolve().parent.parent / "src" / "assets" / "gallery"
+ASSETS = Path(__file__).resolve().parent.parent / "src" / "assets"
 
 parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
 parser.add_argument("photo", type=Path)
@@ -36,11 +42,16 @@ parser.add_argument("--black", type=float, help="0-255: this and darker is off")
 parser.add_argument("--white", type=float, help="0-255: this and brighter is fully lit")
 parser.add_argument("--gamma", type=float, default=1.5)
 parser.add_argument("--warm", action="store_true", help="fade cool backgrounds")
+parser.add_argument("--levels", type=int, help="2-16: this many shades only, for a smaller file")
+parser.add_argument("--mirror", action="store_true", help="flip left to right")
+parser.add_argument("--root", default="gallery", help="folder of src/assets to write into")
 parser.add_argument("--preview", type=Path, help="folder for the preview (default: the photo's)")
 args = parser.parse_args()
 
 # Upright as the camera meant it, then down to size.
 colour = ImageOps.exif_transpose(Image.open(args.photo)).convert("RGB")
+if args.mirror:
+    colour = ImageOps.mirror(colour)
 w, h = colour.size
 if args.square:
     side = min(w, h)
@@ -65,10 +76,20 @@ if args.warm:
     # A faint trace of the rest keeps the outline of the head.
     px *= 0.18 + 0.82 * np.asarray(blurred, dtype=np.float64) / 255
 
-alpha = (px * 255).astype(np.uint8)
-out = GALLERY / f"{args.name}.png"
+out = ASSETS / args.root / f"{args.name}.png"
 out.parent.mkdir(parents=True, exist_ok=True)
-Image.fromarray(np.dstack([np.full_like(alpha, 255), alpha]), "LA").save(out, optimize=True)
+if args.levels:
+    # A palette of whites, each with its own alpha: a few bits a pixel instead of sixteen.
+    steps = args.levels - 1
+    shade = np.round(px * steps).astype(np.uint8)
+    px = shade / steps
+    mask = Image.fromarray(shade, "P")
+    mask.putpalette([255, 255, 255] * args.levels)
+    alphas = bytes(round(level * 255 / steps) for level in range(args.levels))
+    mask.save(out, optimize=True, transparency=alphas, bits=max(1, steps.bit_length()))
+else:
+    alpha = (px * 255).astype(np.uint8)
+    Image.fromarray(np.dstack([np.full_like(alpha, 255), alpha]), "LA").save(out, optimize=True)
 
 preview = (np.array([255, 176, 0]) * px[..., None]).astype(np.uint8)
 preview_dir = args.preview or args.photo.parent

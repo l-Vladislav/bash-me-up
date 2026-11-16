@@ -37,6 +37,7 @@ guest@larionov:~$ help
 
 guest@larionov:~$ games
 
+  dungeon     Find the way out, one picture at a time
   fight       Beat the other candidates to the job offer
   millionaire Fifteen tech questions between you and a million
   lander      Land on the Moon in one piece
@@ -54,6 +55,13 @@ guest@larionov:~$ games
 - `ls` and `cat about.txt` work too, for visitors with shell habits.
 - Games take over the prompt until they end; `quit` or **Ctrl+C** hands it back. The
   tic-tac-toe board is clickable too.
+- `dungeon` is a first-person dungeon crawler: every step and every turn brings on a new picture
+  of the corridor ahead, and whatever lives in it. A step grows out of the distance, a turn slides
+  in from its side, a struck monster flickers and lunges back, and the health bars run down. The
+  hero beside the scene is the portrait from the gallery. The scenes were drawn by an image model
+  and turned into phosphor masks with `scripts/picture.py --root dungeon`; the map is not a file
+  at all, but an SVG put together cell by cell from what has been walked and seen
+  (`dungeon/atlas.ts`). The floor plan is a few rows of text in `dungeon/maze.ts`.
 - `fight` is a turn-based brawl in the spirit of the browser fight clubs of the 2000s: the
   fighter's stats are counted from the résumé, every skill on it is a punch, and the opponents
   are the other candidates for the job.
