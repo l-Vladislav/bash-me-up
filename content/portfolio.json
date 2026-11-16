@@ -78,16 +78,17 @@
       "period": "01/2025 - present",
       "highlights": [
         "Delivered the product MVP in 6 months as one of 3 engineers; launched to a pilot with test users.",
-        "Built the web and mobile app (React/Next.js, Capacitor) on a Django/PostgreSQL backend.",
+        "Designed and built the REST API backend (Django/PostgreSQL) for the web and mobile app (React/Next.js, Capacitor).",
         "Built push notifications end to end: backend triggers, native delivery (incl. FCM), scalable front-end handling.",
         "Developed interactive maps with custom themes and 3D objects for the mobile app.",
         "Turned Figma designs into development plans and implemented complex multi-layer animations in React.",
-        "Set up and maintained AWS infrastructure with Terraform (Docker, Redis, PostgreSQL).",
+        "Set up and maintained AWS infrastructure with Terraform, including API Gateway (Docker, Redis, PostgreSQL).",
         "Designed an AI assistant architecture over internal data and services (RAG / MCP approaches)."
       ],
       "stack": [
         "Python",
         "Django",
+        "REST APIs",
         "React",
         "Next.js",
         "TypeScript",
@@ -95,9 +96,11 @@
         "Capacitor",
         "PostgreSQL",
         "AWS",
+        "API Gateway",
         "Terraform",
         "Redis",
         "Docker",
+        "FCM",
         "RAG",
         "MCP"
       ]
@@ -114,6 +117,8 @@
         "Built or migrated 1,000+ reports from the legacy system; auto-filters halved report setup time.",
         "Led the phased migration of a large no-code, configuration-driven application from AngularJS to Angular 17: zero migration-related downtime, all client configurations preserved, +30% render performance, -50% build time.",
         "Co-designed and developed the core backend migration from ColdFusion to C#, including the architecture.",
+        "Worked on OAuth 2.0 authorization with a call-center platform: agents sign in on one platform and use the other without a second login. Tested endpoints in Postman and used Grafana for logging and monitoring.",
+        "Built a proof of concept for moving the product to Google Cloud (Firebase, Cloud Functions); after evaluating it, the project was shelved.",
         "Led a team of 5 developers: grew 4 juniors to senior level and shortened the release cycle from 4 to 3 weeks."
       ],
       "stack": [
@@ -123,15 +128,26 @@
         "RxJS",
         "NgRx",
         "C#",
-        "Python",
         ".NET",
+        "Python",
+        "REST APIs",
+        "OpenAPI/Swagger",
+        "OAuth 2.0",
+        "JWT",
+        "Microservices",
+        "Postman",
+        "Grafana",
         "MSSQL",
         "MySQL",
         "Azure",
+        "Google Cloud (Firebase, Cloud Functions)",
         "Docker",
+        "CI/CD",
         "Jest",
         "Cypress",
-        "Power BI"
+        "ESLint",
+        "Power BI",
+        "Qlik Sense"
       ]
     },
     {
@@ -169,16 +185,38 @@
       "items": ["Python (Django)", "C#/.NET (ASP.NET Core)", "Node.js"]
     },
     {
+      "name": "API",
+      "items": [
+        "RESTful API design",
+        "OpenAPI/Swagger",
+        "OAuth 2.0",
+        "JWT",
+        "TLS",
+        "Microservices",
+        "Queue-based services",
+        "Postman",
+        "FCM push"
+      ]
+    },
+    {
       "name": "Data",
       "items": ["PostgreSQL", "MSSQL", "MySQL", "Redis"]
     },
     {
       "name": "Cloud",
-      "items": ["AWS (Terraform)", "Azure", "Docker", "CI/CD"]
+      "items": [
+        "AWS (Terraform, API Gateway)",
+        "Azure",
+        "Google Cloud (Firebase, Cloud Functions)",
+        "Docker",
+        "Kubernetes (basic)",
+        "CI/CD",
+        "Grafana"
+      ]
     },
     {
       "name": "Quality",
-      "items": ["REST APIs", "Microservices", "Jest", "Cypress", "Git"]
+      "items": ["Jest", "Cypress", "ESLint", "Code review", "Git"]
     },
     {
       "name": "AI",
@@ -199,7 +237,7 @@
         "Took the product from zero to a pilot with test users in 6 months.",
         "Built push notifications end to end: backend triggers, native delivery (incl. FCM), scalable front-end handling.",
         "Developed interactive maps with custom themes and 3D objects for the mobile app.",
-        "Set up and maintained the AWS infrastructure with Terraform (Docker, Redis, PostgreSQL).",
+        "Set up and maintained the AWS infrastructure with Terraform, including API Gateway (Docker, Redis, PostgreSQL).",
         "Designed an AI assistant architecture over internal data and services (RAG / MCP approaches)."
       ],
       "stack": [
@@ -210,7 +248,10 @@
         "Django",
         "PostgreSQL",
         "AWS",
-        "Terraform"
+        "Terraform",
+        "API Gateway",
+        "Redis",
+        "FCM"
       ]
     },
     {
