@@ -565,8 +565,9 @@ describe('dungeon', () => {
 
   it('shows the corridor ahead and the hero under it', () => {
     const lit = delve(lucky, '');
+    // The passage south of the way in is at the hero's shoulder: out of the picture, but in the text.
     expect(pictures(lit)).toEqual([
-      'A corridor running on, with an archway on the right',
+      'A stone corridor running into the dark',
       expect.stringContaining('Portrait'),
       'Map of the dungeon walked so far',
     ]);
@@ -575,14 +576,19 @@ describe('dungeon', () => {
   });
 
   it('turns to face a passage, never a wall, and offers only the moves that lead somewhere', () => {
+    // The picture is of the cell ahead: the corridor just left is behind the hero's shoulder now.
     const turned = delve(lucky, 'right');
-    expect(pictures(turned)[0]).toBe('A corridor running on, with an archway on the left');
+    expect(pictures(turned)[0]).toBe('A stone corridor running into the dark');
     expect(text(turned)).toContain('forward  left  back  map');
 
     // The way in has rock on its left; turning back is always possible.
     expect(text(delve(lucky, 'left'))).toBe('No way to the left: solid rock.');
     expect(text(delve(lucky, ''))).toContain('forward  right  back  map');
-    expect(pictures(delve(lucky, 'back'))[0]).toBe('A wall ahead and an archway on the left');
+    expect(pictures(delve(lucky, 'back'))[0]).toBe('A dead end: a blank stone wall');
+    // A step back from the rat: the way in is ahead, with its passage south on the left.
+    expect(pictures(delve(lucky, 'forward back'))[0]).toBe(
+      'A wall ahead and an archway on the left',
+    );
     expect(text(delve(lucky, 'back forward'))).toBe('Solid rock that way.');
   });
 
@@ -617,10 +623,11 @@ describe('dungeon', () => {
 
   it('names the pictures one move away, to be fetched ahead of time', () => {
     const ahead = (step: SessionStep): number => step.lines[0]?.image?.upcoming?.length ?? 0;
-    // From the way in: the corridor a step on, and the views to the right and behind.
-    expect(ahead(delve(lucky, ''))).toBe(3);
-    // In a fight: the corridor, the same picture whether the rat falls or the hero runs, and the worst case.
-    expect(ahead(delve(lucky, '2forward'))).toBe(2);
+    // From the way in, a step on and a turn right both look down a bare corridor, like the
+    // picture already up; only the wall behind is new. Each picture is fetched once.
+    expect(ahead(delve(lucky, ''))).toBe(1);
+    // In a fight: the corridor on if the rat falls, the way in if the hero runs, and the worst case.
+    expect(ahead(delve(lucky, '2forward'))).toBe(3);
     expect(ahead(delve(lucky, '2forward 2attack 3forward'))).toBeGreaterThan(0);
   });
 
@@ -679,7 +686,7 @@ describe('dungeon', () => {
     const fled = delve(() => 0, '2forward flee');
     expect(text(fled)).toContain('You back away, and run.');
     expect(text(fled)).toContain(`${MAX_HEALTH - 1}/${MAX_HEALTH}`);
-    expect(pictures(fled)[0]).toBe('A stone corridor running into the dark');
+    expect(pictures(fled)[0]).toBe('A wall ahead and an archway on the left');
 
     const dead = delve(
       () => 0,
@@ -725,6 +732,6 @@ describe('dungeon', () => {
 
     // Any move brings the scene back.
     const on = playThrough(map.next ?? start('dungeon'), ['back']);
-    expect(pictures(on)[0]).toBe('A stone corridor running into the dark');
+    expect(pictures(on)[0]).toBe('A wall ahead and an archway on the left');
   });
 });

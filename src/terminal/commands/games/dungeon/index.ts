@@ -172,19 +172,28 @@ const openings = (delve: Delve): readonly boolean[] => {
   );
 };
 
-/** What the visitor sees: a dweller in the way, a thing in front, or bare corridor. */
+/**
+ * What the visitor sees: a dweller in the way, a thing in front, or the
+ * corridor ahead. The archways in a picture are the sides of the next cell:
+ * those of the cell underfoot are at the visitor's shoulders, out of sight,
+ * and one of them, after a turn, is the way the visitor came.
+ */
 export const view = (delve: Delve): Scene => {
   const foe = lurking(delve, delve.at);
   if (foe) return foe;
 
-  const [left = false, ahead = false, right = false] = openings(delve);
-  if (!left && !right) {
-    const beyond = tileAt(towards(delve.at, delve.facing));
-    if (beyond === DOOR && !ahead) return 'door';
-    if (beyond === STAIRS) return 'stairs';
-    if (!ahead && tileAt(delve.at) === CHEST) return 'chest';
-    if (!ahead && tileAt(delve.at) === FOUNTAIN) return 'fountain';
+  const next = towards(delve.at, delve.facing);
+  const beyond = tileAt(next);
+  if (beyond === DOOR && !isOpened(delve, next)) return 'door';
+  if (beyond === STAIRS) return 'stairs';
+  if (!passable(delve, next)) {
+    const here = tileAt(delve.at);
+    if (here === CHEST) return 'chest';
+    if (here === FOUNTAIN) return 'fountain';
+    return 'dead-end';
   }
+
+  const [left = false, ahead = false, right = false] = openings({ ...delve, at: next });
   return SHAPES[[left, ahead, right].map(Number).join('')] ?? 'dead-end';
 };
 
