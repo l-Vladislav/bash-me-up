@@ -1,4 +1,4 @@
-import { blank, bright, dim, line } from '../../line';
+import { blank, bright, cued, dim, line } from '../../line';
 import type { Line } from '../../line';
 import type { Command, Session, SessionStep } from '../types';
 import { playAgain, quitHint, randomInt } from './shared';
@@ -26,7 +26,10 @@ const round = (secret: number, tries: number): Session => ({
     const count = tries + 1;
     if (guess === secret) {
       const won: Line[] = [
-        line(bright(`${secret}`), ` it is! ${count} ${count === 1 ? 'try' : 'tries'}.`),
+        cued(
+          'win',
+          line(bright(`${secret}`), ` it is! ${count} ${count === 1 ? 'try' : 'tries'}.`),
+        ),
         line(dim(verdict(count))),
         blank(),
         playAgain('guess'),
@@ -34,7 +37,7 @@ const round = (secret: number, tries: number): Session => ({
       return { lines: won };
     }
     return {
-      lines: [line(guess < secret ? 'Higher.' : 'Lower.')],
+      lines: [cued('blip', line(guess < secret ? 'Higher.' : 'Lower.'))],
       next: round(secret, count),
     };
   },
@@ -43,6 +46,7 @@ const round = (secret: number, tries: number): Session => ({
 export const guess: Command = {
   name: 'guess',
   summary: 'Guess the number I am thinking of',
+  music: 'guess',
   run: (_args, { random }) => ({
     lines: [line(`I am thinking of a number between ${MIN} and ${MAX}.`), quitHint(), blank()],
     session: round(randomInt(random, MIN, MAX), 0),

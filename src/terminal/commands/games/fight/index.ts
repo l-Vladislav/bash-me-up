@@ -5,8 +5,19 @@
  * in `arena`; this file runs the evening.
  */
 import { profile } from '../../../../content/resume';
-import { action, animated, blank, bright, bullet, dim, heading, later, line } from '../../../line';
-import type { Line, Span } from '../../../line';
+import {
+  action,
+  animated,
+  blank,
+  bright,
+  bullet,
+  cued,
+  dim,
+  heading,
+  later,
+  line,
+} from '../../../line';
+import type { Cue, Line, Span } from '../../../line';
 import type { Command, Session, SessionStep } from '../../types';
 import { pick, playAgain, quitHint, randomInt } from '../shared';
 import { arena } from './arena';
@@ -173,8 +184,14 @@ const swing = (
 
 const damage = (blow: Blow): Span => bright(`  -${blow.damage} HP`);
 
+/** How a blow sounds, from the side of `who` struck it. */
+const SOUNDS: Readonly<Record<keyof Poses, Readonly<Record<BlowKind, Cue>>>> = {
+  hero: { dodged: 'miss', blocked: 'block', hit: 'hit', pierced: 'hit', critical: 'critical' },
+  rival: { dodged: 'miss', blocked: 'block', hit: 'hurt', pierced: 'hurt', critical: 'critical' },
+};
+
 /** The hero's blow in words. Moves are skills from the résumé. */
-const heroBlow = (blow: Blow, move: string, rival: string, zone: Zone): Line => {
+const heroWords = (blow: Blow, move: string, rival: string, zone: Zone): Line => {
   const place = zoneName(zone);
   switch (blow.kind) {
     case 'dodged':
@@ -194,7 +211,7 @@ const heroBlow = (blow: Blow, move: string, rival: string, zone: Zone): Line => 
   }
 };
 
-const rivalBlow = (blow: Blow, move: string, rival: string, zone: Zone): Line => {
+const rivalWords = (blow: Blow, move: string, rival: string, zone: Zone): Line => {
   const place = zoneName(zone);
   switch (blow.kind) {
     case 'dodged':
@@ -214,13 +231,20 @@ const rivalBlow = (blow: Blow, move: string, rival: string, zone: Zone): Line =>
   }
 };
 
+/** A blow in words, sounding as it lands. */
+const heroBlow = (blow: Blow, move: string, rival: string, zone: Zone): Line =>
+  cued(SOUNDS.hero[blow.kind], heroWords(blow, move, rival, zone));
+
+const rivalBlow = (blow: Blow, move: string, rival: string, zone: Zone): Line =>
+  cued(SOUNDS.rival[blow.kind], rivalWords(blow, move, rival, zone));
+
 const firstName = profile.name.split(' ')[0] ?? profile.name;
 
 const offer = (bout: Bout, log: readonly Line[], show: Show): SessionStep => ({
   lines: [
     ...ring(bout, log, show),
     ...later(runtime(show), [
-      line(bright(bout.rival.fighter.name), ` ${rivalAt(bout.stage).defeat}`),
+      cued('win', line(bright(bout.rival.fighter.name), ` ${rivalAt(bout.stage).defeat}`)),
       blank(),
       heading('offer'),
       line(
@@ -241,7 +265,7 @@ const rejection = (bout: Bout, log: readonly Line[], show: Show): SessionStep =>
     ...ring(bout, log, show),
     ...later(runtime(show), [
       blank(),
-      heading('rejected'),
+      cued('lose', heading('rejected')),
       line(
         '"Thank you for your interest. We have decided to move forward with ',
         bright(bout.rival.fighter.name),
@@ -268,8 +292,8 @@ const interval = (bout: Bout, log: readonly Line[], show: Show): SessionStep => 
     lines: [
       ...ring(bout, log, show),
       ...later(runtime(show), [
-        line(bright(beaten.name), ` ${beaten.defeat}`),
-        ...(beaten.loot ? [line(dim('You pick up:')), itemRow(beaten.loot)] : []),
+        cued('right', line(bright(beaten.name), ` ${beaten.defeat}`)),
+        ...(beaten.loot ? [line(dim('You pick up:')), cued('coin', itemRow(beaten.loot))] : []),
         line(dim(`A coffee break restores ${rest} HP.`)),
         blank(),
         line(
@@ -409,6 +433,7 @@ const characterSheet = (): Line[] => [
 export const fight: Command = {
   name: 'fight',
   summary: 'Beat the other candidates to the job offer',
+  music: 'fight',
   run: (_args, { random }) => {
     const stats = heroWith(STARTING_ITEMS);
     const hero: Combatant = { fighter: HERO, stats, health: maxHealth(stats) };

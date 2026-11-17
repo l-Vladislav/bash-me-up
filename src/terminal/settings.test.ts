@@ -7,7 +7,7 @@ describe('parseSettings', () => {
   });
 
   it('restores valid settings', () => {
-    const stored = { phosphor: 'green', crt: false, brightness: 0.2, contrast: 1 };
+    const stored = { phosphor: 'green', crt: false, brightness: 0.2, contrast: 1, sound: true };
     expect(parseSettings(JSON.stringify(stored))).toEqual(stored);
   });
 

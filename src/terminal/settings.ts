@@ -11,6 +11,8 @@ export interface Settings {
   brightness: number;
   /** Position of the contrast knob, from 0 to 1. */
   contrast: number;
+  /** Whether the speaker clicks, beeps and hums. Off until the visitor asks. */
+  sound: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -18,6 +20,7 @@ export const DEFAULT_SETTINGS: Settings = {
   crt: true,
   brightness: 0.5,
   contrast: 0.5,
+  sound: false,
 };
 
 export const isPhosphor = (value: unknown): value is Phosphor =>
@@ -38,6 +41,7 @@ export const parseSettings = (raw: string | null): Settings => {
         ? stored.brightness
         : DEFAULT_SETTINGS.brightness,
       contrast: isKnobPosition(stored?.contrast) ? stored.contrast : DEFAULT_SETTINGS.contrast,
+      sound: typeof stored?.sound === 'boolean' ? stored.sound : DEFAULT_SETTINGS.sound,
     };
   } catch {
     return DEFAULT_SETTINGS;

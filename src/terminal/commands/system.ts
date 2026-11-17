@@ -30,21 +30,41 @@ const theme: Command = {
   },
 };
 
-const CRT_MODES = ['on', 'off'] as const;
+const SWITCH_MODES = ['on', 'off'] as const;
+
+/** Reads an on/off argument; without one the switch flips. `null` for anything else. */
+const switchTo = (mode: string | undefined, current: boolean): boolean | null => {
+  if (mode === undefined) return !current;
+  if (mode === 'on' || mode === 'off') return mode === 'on';
+  return null;
+};
 
 const crt: Command = {
   name: 'crt',
   summary: 'Toggle the CRT simulation',
-  usage: `[${CRT_MODES.join('|')}]`,
-  options: CRT_MODES,
+  usage: `[${SWITCH_MODES.join('|')}]`,
+  options: SWITCH_MODES,
   run: ([mode], { settings }) => {
-    if (mode !== undefined && mode !== 'on' && mode !== 'off') {
-      return { lines: [line(`crt: expected "on" or "off", got "${mode}"`)] };
-    }
-    const enabled = mode === undefined ? !settings.crt : mode === 'on';
+    const enabled = switchTo(mode, settings.crt);
+    if (enabled === null) return { lines: [line(`crt: expected "on" or "off", got "${mode}"`)] };
     return {
       lines: [line('CRT simulation ', bright(enabled ? 'on' : 'off'), '.')],
       effects: [{ type: 'set-crt', enabled }],
+    };
+  },
+};
+
+const sound: Command = {
+  name: 'sound',
+  summary: 'Turn the speaker on or off',
+  usage: `[${SWITCH_MODES.join('|')}]`,
+  options: SWITCH_MODES,
+  run: ([mode], { settings }) => {
+    const enabled = switchTo(mode, settings.sound);
+    if (enabled === null) return { lines: [line(`sound: expected "on" or "off", got "${mode}"`)] };
+    return {
+      lines: [line('Sound ', bright(enabled ? 'on' : 'off'), '.')],
+      effects: [{ type: 'set-sound', enabled }],
     };
   },
 };
@@ -90,6 +110,6 @@ const exit: Command = {
         },
 };
 
-export const systemCommands: readonly Command[] = [theme, crt, history, clear, reboot];
+export const systemCommands: readonly Command[] = [theme, crt, sound, history, clear, reboot];
 
 export const hiddenCommands: readonly Command[] = [whoami, sudo, exit];

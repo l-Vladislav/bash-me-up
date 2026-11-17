@@ -1,3 +1,4 @@
+import { play } from '../audio/sound';
 import styles from './QuickKeys.module.css';
 
 interface QuickKeysProps {
@@ -16,7 +17,10 @@ export function QuickKeys({ commands, disabled = false, onRun }: QuickKeysProps)
           type="button"
           className={styles.key}
           disabled={disabled}
-          onClick={() => onRun(command)}
+          onClick={() => {
+            play('button');
+            onRun(command);
+          }}
         >
           {command}
         </button>

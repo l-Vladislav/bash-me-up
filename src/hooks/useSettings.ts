@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { setSoundEnabled } from '../audio/sound';
 import { parseSettings } from '../terminal/settings';
 import type { Settings } from '../terminal/settings';
 
@@ -21,6 +22,7 @@ export const useSettings = (): [Settings, UpdateSettings] => {
 
   useEffect(() => {
     document.documentElement.dataset.phosphor = settings.phosphor;
+    setSoundEnabled(settings.sound);
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
     } catch {

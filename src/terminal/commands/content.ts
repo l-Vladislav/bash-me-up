@@ -163,7 +163,8 @@ const albumCatalog = (album: Album): Catalog<GalleryPicture> => ({
   ],
   details: ({ src, title, caption }) => [
     { spans: [], image: { src, alt: title, rows: PICTURE_ROWS, side: 'block' } },
-    line(dim(caption)),
+    // Its name from the album's list, then the caption, on the one row under it.
+    line(bright(title), dim(` - ${caption}`)),
   ],
 });
 

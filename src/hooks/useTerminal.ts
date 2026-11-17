@@ -1,6 +1,7 @@
 import { useEffect, useEffectEvent, useReducer, useRef, useState } from 'react';
 import { isOwner, setOwner } from '../admin/api';
 import { forgetRoot, isRoot, perform } from '../admin/remote';
+import { chatter, cue, drawing, play, setMusic } from '../audio/sound';
 import { track } from '../visits';
 import { bootSequence } from '../content/boot';
 import { terminal } from '../content/resume';
@@ -8,8 +9,8 @@ import { execute, findCommand, tokenize } from '../terminal/commands';
 import type { CommandContext, CommandResult, Effect, Session } from '../terminal/commands';
 import { present } from '../terminal/commands/admin';
 import type { RemoteRequest } from '../terminal/commands/admin/remote';
-import { blank, dim, line } from '../terminal/line';
-import type { Line } from '../terminal/line';
+import { blank, dim, line, playtime, toPlainText } from '../terminal/line';
+import type { Music, Line, Picture } from '../terminal/line';
 import { LinePrinter } from '../terminal/printer';
 import { EMPTY_SCREEN, screenReducer } from '../terminal/screen';
 import type { Entry, Screen } from '../terminal/screen';
@@ -74,6 +75,52 @@ const readDeepLink = (settings: Settings): DeepLink | null => {
   return { input, result: execute(input, context) };
 };
 
+/** Milliseconds between printed lines that set no pace of their own. */
+const LINE_INTERVAL = 12;
+/** Stretches every pause in a printout: 1.15 prints 15% slower. */
+const PRINT_PACE = 1.15;
+
+/**
+ * How a picture is drawn in, in seconds and bands, as its CSS animation in
+ * Terminal.module.css does it; `null` for one that shows at once or only jolts.
+ */
+const drawnIn = ({ still, motion }: Picture): [number, number] | null => {
+  if (still) return null;
+  switch (motion) {
+    case undefined:
+      return [1.2, 20];
+    case 'advance':
+      return [0.42, 7];
+    case 'left':
+    case 'right':
+      return [0.4, 12];
+    case 'back':
+      return [0.45, 10];
+    default:
+      return null;
+  }
+};
+
+/** How much a row makes the terminal chatter: its characters; a picture, a long burst. */
+const chattering = (row: Line): number => {
+  if (row.echo) return 0;
+  if (row.image) return 30;
+  return toPlainText(row).replace(/\s/g, '').length;
+};
+
+/**
+ * Milliseconds from a row's printing to its sound: when its frames have
+ * played and it comes to rest, or when its picture starts to move.
+ */
+const cueDelay = (row: Line): number => {
+  if (row.image) return row.image.after ?? 0;
+  return row.loop ? 0 : playtime(row);
+};
+
+/** The background the command in `input` plays under its program, if any. */
+const musicOf = (input: string): Music | null =>
+  findCommand(tokenize(input)[0] ?? '')?.music ?? null;
+
 let nextEntryId = 0;
 
 /** Gives each printed line a stable identity for rendering. */
@@ -89,6 +136,12 @@ export const useTerminal = (settings: Settings, updateSettings: UpdateSettings):
   // Deep link: `?run=projects` types a command for the visitor after boot. It may start a game.
   const [deepLink] = useState(() => readDeepLink(settings));
   const [session, setSession] = useState<Session | null>(deepLink?.result.session ?? null);
+  // The background of the program that runs, as its command asks; it plays only while one does.
+  const [music, setMusicOf] = useState<Music | null>(() =>
+    deepLink ? musicOf(deepLink.input) : null,
+  );
+  const playing = session ? music : null;
+  useEffect(() => setMusic(playing), [playing]);
   const printerRef = useRef<LinePrinter | null>(null);
   // Root lasts until the page reloads or the terminal reboots: `sudo` asks every time.
   const [root, setRoot] = useState(isRoot);
@@ -132,6 +185,9 @@ export const useTerminal = (settings: Settings, updateSettings: UpdateSettings):
       case 'set-crt':
         updateSettings({ crt: effect.enabled });
         break;
+      case 'set-sound':
+        updateSettings({ sound: effect.enabled });
+        break;
       case 'remote':
         ask(effect.request);
         break;
@@ -171,8 +227,20 @@ export const useTerminal = (settings: Settings, updateSettings: UpdateSettings):
 
   useEffect(() => {
     const printer = new LinePrinter(
-      (lines) => dispatch({ type: 'print', entries: stamp(lines) }),
+      (lines) => {
+        dispatch({ type: 'print', entries: stamp(lines) });
+        for (const row of lines) if (row.cue) cue(row.cue, cueDelay(row));
+        // A row printed on its own chatters; a whole printout flushed at once does not.
+        const [row] = lines;
+        if (lines.length === 1 && row) {
+          const draw = row.image && drawnIn(row.image);
+          if (draw) drawing(...draw);
+          else chatter(chattering(row));
+        }
+      },
       setBusy,
+      LINE_INTERVAL,
+      PRINT_PACE,
     );
 
     printerRef.current = printer;
@@ -193,6 +261,8 @@ export const useTerminal = (settings: Settings, updateSettings: UpdateSettings):
     const known = findCommand(tokenize(command)[0] ?? '');
     // Nor the admin's own root commands.
     if (known && !known.root) track('command', known.name);
+    // "command not found" rings the bell, as a terminal does for BEL.
+    if (command && !known) play('bell');
     // An answer from the API brings its own spacer when it comes.
     let output: readonly Line[] = [
       echo(command, shellPrompt),
@@ -209,6 +279,7 @@ export const useTerminal = (settings: Settings, updateSettings: UpdateSettings):
         case 'reboot':
           dispatch({ type: 'wipe', trailing: stamp([echo(command, shellPrompt)]) });
           output = bootSequence(settings);
+          play('degauss');
           setBootedAt(Date.now());
           dropRoot();
           break;
@@ -219,6 +290,7 @@ export const useTerminal = (settings: Settings, updateSettings: UpdateSettings):
 
     setHistory(nextHistory);
     setSession(result.session ?? null);
+    setMusicOf(known?.music ?? null);
     printer.print(output);
   };
 

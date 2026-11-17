@@ -46,6 +46,27 @@ describe('LinePrinter', () => {
     expect(printed).toEqual(['slow']);
   });
 
+  it('stretches every pause by its pace', () => {
+    const printed: string[] = [];
+    const printer = new LinePrinter(
+      (lines: Line[]) => printed.push(...lines.map(toPlainText)),
+      () => undefined,
+      INTERVAL,
+      1.5,
+    );
+    printer.print([line('a'), { ...line('slow'), delay: 100 }]);
+
+    vi.advanceTimersByTime(14);
+    expect(printed).toEqual([]);
+    vi.advanceTimersByTime(1);
+    expect(printed).toEqual(['a']);
+
+    vi.advanceTimersByTime(149);
+    expect(printed).toEqual(['a']);
+    vi.advanceTimersByTime(1);
+    expect(printed).toEqual(['a', 'slow']);
+  });
+
   it('flush prints the rest at once', () => {
     const { printer, printed, busy } = setup();
     printer.print([line('a'), line('b'), line('c')]);

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { play, setMonitorPower } from './audio/sound';
 import { Monitor } from './components/Monitor';
 import { QuickKeys } from './components/QuickKeys';
 import { Terminal } from './components/Terminal';
@@ -14,6 +15,8 @@ export function App() {
   useVisualViewport();
 
   const handlePowerChange = (on: boolean): void => {
+    play(on ? 'power-on' : 'power-off');
+    setMonitorPower(on);
     // Switching back on is a cold start: the terminal boots from scratch.
     if (on) shell.reboot();
     setPowered(on);

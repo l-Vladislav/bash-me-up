@@ -1,5 +1,5 @@
-import { action, animated, blank, bright, dim, line } from '../../line';
-import type { Line, Span } from '../../line';
+import { action, animated, blank, bright, cued, dim, line } from '../../line';
+import type { Cue, Line, Span } from '../../line';
 import type { Command, Session, SessionStep } from '../types';
 import { pick, playAgain, quitHint } from './shared';
 
@@ -85,6 +85,7 @@ const grid = (board: Board, faded: readonly number[] = []): Line[] => {
 const finish = (board: Board): SessionStep | undefined => {
   const won = winner(board);
   const message = won === 'X' ? 'You win!' : won === 'O' ? 'I win.' : 'A draw.';
+  const sound: Cue = won === 'X' ? 'win' : won === 'O' ? 'lose' : 'draw';
   if (!won && freeCells(board).length > 0) return undefined;
 
   // The three in a row blink before the board comes to rest.
@@ -97,7 +98,7 @@ const finish = (board: Board): SessionStep | undefined => {
     lines: [
       ...animated(grid(board), won ? blink : []),
       blank(),
-      line(message),
+      cued(sound, line(message)),
       blank(),
       playAgain('tictactoe'),
     ],
@@ -127,6 +128,7 @@ const play = (board: Board, random: () => number): Session => ({
 export const tictactoe: Command = {
   name: 'tictactoe',
   summary: 'Noughts and crosses against the machine',
+  music: 'tictactoe',
   run: (_args, { random }) => ({
     lines: [
       line('You are ', bright('X'), ' and go first. Type a cell number or click it.'),

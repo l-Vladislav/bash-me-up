@@ -62,6 +62,41 @@ export interface Frame {
   ms: number;
 }
 
+/** A game's sound effect, named for what happened; `audio/sound` makes the noise. */
+export type Cue =
+  /** A neutral beep: noted, try again. */
+  | 'blip'
+  /** A good move: a letter in the word, a right answer. */
+  | 'right'
+  /** A bad one: a letter not in the word. */
+  | 'wrong'
+  | 'win'
+  | 'lose'
+  | 'draw'
+  /** Gold, loot, money banked. */
+  | 'coin'
+  | 'heal'
+  | 'unlock'
+  /** Something hostile turns up. */
+  | 'danger'
+  /** Landing a blow, and taking one. */
+  | 'hit'
+  | 'hurt'
+  | 'critical'
+  | 'block'
+  /** A swing through empty air. */
+  | 'miss'
+  | 'engine'
+  | 'explosion'
+  | 'alarm';
+
+/**
+ * A game's theme tune, looping while it runs, named for its game; the scores
+ * are in `audio/sound`.
+ */
+export type Music =
+  'dungeon' | 'fight' | 'millionaire' | 'xlander' | 'hangman' | 'guess' | 'tictactoe';
+
 export interface Line {
   /** What the row says; an animated row settles on this once its frames have played. */
   spans: readonly Span[];
@@ -90,6 +125,11 @@ export interface Line {
    * only where a scene leaves room for a second picture beside its text (60rem).
    */
   screen?: 'wide' | 'narrow' | 'broad';
+  /**
+   * Sounds as the row comes to rest: once its frames have played (at once, if
+   * they loop); for a picture, as its motion starts.
+   */
+  cue?: Cue;
 }
 
 type Part = string | Span;
@@ -153,6 +193,9 @@ export const later = (ms: number, lines: readonly Line[]): Line[] =>
   ms <= 0
     ? [...lines]
     : lines.map((entry) => ({ ...entry, frames: [{ spans: [], ms }, ...(entry.frames ?? [])] }));
+
+/** The row with a sound to go with it; none leaves it as it is. */
+export const cued = (cue: Cue | undefined, entry: Line): Line => (cue ? { ...entry, cue } : entry);
 
 /** How long a row's animation runs, in milliseconds. */
 export const playtime = ({ frames = [] }: Line): number =>

@@ -1,6 +1,6 @@
 import portrait from '../../../../assets/gallery/portraits/portrait.png';
 import { profile } from '../../../../content/resume';
-import { action, blank, bright, dim, heading, later, line } from '../../../line';
+import { action, blank, bright, cued, dim, heading, later, line, playtime } from '../../../line';
 import type { Line, Motion, Picture } from '../../../line';
 import type { Command, Session, SessionStep } from '../../types';
 import { playAgain, quitHint, randomInt } from '../shared';
@@ -37,6 +37,8 @@ const PARTING_ACCURACY = 0.5;
 const REPLY_MS = 450;
 /** One notch of a bar running down, or up, in milliseconds. */
 const TICK_MS = 70;
+/** A felled dweller's gold shows this much after the blow, so the two sounds do not clash. */
+const LOOT_MS = 350;
 
 interface Breed {
   name: string;
@@ -463,7 +465,7 @@ const TREASURE =
 
 const escape = (delve: Delve): SessionStep =>
   finale('escape', [
-    line(bright('DAYLIGHT.'), ' You climb out of the dark and do not look back.'),
+    cued('win', line(bright('DAYLIGHT.'), ' You climb out of the dark and do not look back.')),
     line(
       dim(`${tally(delve)}. `),
       delve.gold === TREASURE
@@ -472,11 +474,14 @@ const escape = (delve: Delve): SessionStep =>
     ),
   ]);
 
+/** The end, told once the last blow has landed. */
 const death = (delve: Delve, foe: Foe, log: readonly Line[]): SessionStep =>
   finale('death', [
     ...log,
-    line(bright('YOU DIED.'), ` The ${BREEDS[foe].name} keeps the torch.`),
-    line(dim(`${tally(delve)}.`)),
+    ...later(Math.max(0, ...log.map(playtime)), [
+      cued('lose', line(bright('YOU DIED.'), ` The ${BREEDS[foe].name} keeps the torch.`)),
+      line(dim(`${tally(delve)}.`)),
+    ]),
   ]);
 
 const hint = (delve: Delve, text: string): SessionStep => ({
@@ -494,7 +499,7 @@ const advance = (delve: Delve): SessionStep => {
   if (tile === DOOR && !isOpened(delve, target)) {
     if (!delve.key) return hint(delve, 'Locked. There must be a key somewhere down here.');
     opened = remembered(opened, target);
-    log.push(line('The key turns, and the door groans open.'));
+    log.push(cued('unlock', line('The key turns, and the door groans open.')));
   }
 
   const moved: Delve = {
@@ -508,7 +513,7 @@ const advance = (delve: Delve): SessionStep => {
   if (tile === STAIRS) return escape(moved);
 
   const foe = lurking(moved, target);
-  if (foe) log.push(line(bright(BREEDS[foe].enters)));
+  if (foe) log.push(cued('danger', line(bright(BREEDS[foe].enters))));
   return show(moved, { log, motion: foe ? undefined : 'advance' });
 };
 
@@ -533,7 +538,10 @@ const unpack = (delve: Delve): SessionStep => {
       key: delve.key || Boolean(loot.key),
       opened: remembered(delve.opened, delve.at),
     },
-    { log: [line('The lid creaks. Inside: ', bright(listed(finds)), '.')], before: delve },
+    {
+      log: [cued('coin', line('The lid creaks. Inside: ', bright(listed(finds)), '.'))],
+      before: delve,
+    },
   );
 };
 
@@ -552,15 +560,21 @@ const noDrink = (delve: Delve): string =>
 
 const drink = (delve: Delve): SessionStep => {
   if (tileAt(delve.at) === FOUNTAIN) {
-    const words =
-      delve.health < MAX_HEALTH
-        ? 'You drink from the fountain, and the cuts close.'
-        : 'You drink from the fountain. Nothing hurts, so nothing heals.';
-    return show({ ...delve, health: MAX_HEALTH }, { log: [line(words)], before: delve });
+    const hurt = delve.health < MAX_HEALTH;
+    const words = hurt
+      ? 'You drink from the fountain, and the cuts close.'
+      : 'You drink from the fountain. Nothing hurts, so nothing heals.';
+    return show(
+      { ...delve, health: MAX_HEALTH },
+      { log: [cued(hurt ? 'heal' : undefined, line(words))], before: delve },
+    );
   }
   const healed = quaffed(delve);
   return healed
-    ? show(healed, { log: [line('The potion burns all the way down. It helps.')], before: delve })
+    ? show(healed, {
+        log: [cued('heal', line('The potion burns all the way down. It helps.'))],
+        before: delve,
+      })
     : hint(delve, noDrink(delve));
 };
 
@@ -621,12 +635,14 @@ const explore = (delve: Delve): Session => ({
 /** A dweller's blow, which lands `accuracy` of the time. */
 const blow = (delve: Delve, foe: Foe, accuracy: number): { after: Delve; row: Line } => {
   const { name, strikes, damage } = BREEDS[foe];
-  if (delve.random() >= accuracy) return { after: delve, row: line(dim(`The ${name} misses.`)) };
+  if (delve.random() >= accuracy) {
+    return { after: delve, row: cued('miss', line(dim(`The ${name} misses.`))) };
+  }
 
   const hurt = randomInt(delve.random, damage[0], damage[1]);
   return {
     after: { ...delve, health: Math.max(0, delve.health - hurt) },
-    row: line(`The ${name} ${strikes} you for `, bright(String(hurt)), '.'),
+    row: cued('hurt', line(`The ${name} ${strikes} you for `, bright(String(hurt)), '.')),
   };
 };
 
@@ -650,13 +666,17 @@ const attack = (delve: Delve, foe: Foe): SessionStep => {
   const [least, most] = reach(delve);
   const damage = randomInt(delve.random, least, most);
   const left = Math.max(0, foeHealth(delve, delve.at, foe) - damage);
-  const hit = line(`You hit the ${name} for `, bright(String(damage)), '.');
+  const hit = cued('hit', line(`You hit the ${name} for `, bright(String(damage)), '.'));
   const struck: Delve = { ...delve, foes: { ...delve.foes, [keyOf(delve.at)]: left } };
 
   return left === 0
     ? show(
         { ...struck, gold: struck.gold + gold },
-        { log: [hit, line(falls, dim(` +${gold} gold`))], before: delve },
+        // The blow, and a moment later the gold it was guarding.
+        {
+          log: [hit, ...later(LOOT_MS, [cued('coin', line(falls, dim(` +${gold} gold`)))])],
+          before: delve,
+        },
       )
     : // The dweller flickers under the blow, then comes at the visitor.
       answer(struck, foe, [hit], delve, 'clash');
@@ -703,7 +723,13 @@ const combat = (delve: Delve, foe: Foe): Session => ({
       case 'drink': {
         const healed = quaffed(delve);
         return healed
-          ? answer(healed, foe, [line('You gulp a potion down between blows.')], delve, 'lunge')
+          ? answer(
+              healed,
+              foe,
+              [cued('heal', line('You gulp a potion down between blows.'))],
+              delve,
+              'lunge',
+            )
           : stay(noDrink(delve));
       }
       default:
@@ -731,6 +757,7 @@ const descent = (random: () => number): Delve => ({
 export const dungeon: Command = {
   name: 'dungeon',
   summary: 'Find the way out, one picture at a time',
+  music: 'dungeon',
   run: (_args, { random }) => ({
     lines: [
       heading('dungeon'),

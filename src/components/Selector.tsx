@@ -1,4 +1,5 @@
 import type { KeyboardEvent } from 'react';
+import { play } from '../audio/sound';
 import styles from './Selector.module.css';
 
 export interface SelectorOption<T extends string> {
@@ -29,7 +30,9 @@ export function Selector<T extends string>({ label, options, value, onChange }: 
   const other = current === left ? right : left;
 
   const select = (option: SelectorOption<T>): void => {
-    if (option.value !== value) onChange(option.value);
+    if (option.value === value) return;
+    play('rotary');
+    onChange(option.value);
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>): void => {

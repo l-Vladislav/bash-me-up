@@ -1,0 +1,99 @@
+/* The button over its caption, like the knobs and the selector. */
+.unit {
+  display: grid;
+  flex: none;
+  justify-items: center;
+  gap: 4px;
+}
+
+/* A square hole in the panel; the cap sits in it, raised or latched in. */
+.bezel {
+  display: block;
+  width: 26px;
+  height: 26px;
+  padding: 2px 2px 4px;
+  border: 0;
+  border-radius: 4px;
+  background: #14130f;
+  box-shadow:
+    inset 0 1px 3px rgb(0 0 0 / 0.9),
+    0 1px 0 rgb(255 255 255 / 0.35);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.cap {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(#56524a, #3a3731);
+  color: #b9b29d;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.18),
+    0 2px 0 #0b0a08;
+  transition:
+    translate 70ms,
+    box-shadow 70ms,
+    background 70ms,
+    color 0.2s;
+}
+
+/* Pressed in: the cap sinks to the bottom of the hole and loses the light. */
+.bezel[aria-checked='true'] .cap {
+  translate: 0 2px;
+  background: linear-gradient(#3a3731, #2c2a24);
+  color: #ece5d0;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.08),
+    0 0 0 #0b0a08;
+}
+
+/* A momentary push while held, before it latches or lets go. */
+.bezel:active .cap {
+  translate: 0 2.5px;
+  box-shadow: none;
+}
+
+.lit[aria-checked='true'] .cap {
+  color: var(--phosphor-bright);
+}
+
+.lit[aria-checked='true'] svg {
+  filter: drop-shadow(0 0 2px var(--phosphor));
+}
+
+.cap svg {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.solid {
+  fill: currentcolor;
+}
+
+.bezel:focus-visible {
+  outline: 2px solid #12110d;
+  outline-offset: 2px;
+}
+
+.label {
+  color: #3d392f;
+  font: 700 0.5rem/1 var(--font-label);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 rgb(255 255 255 / 0.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cap {
+    transition: none;
+  }
+}

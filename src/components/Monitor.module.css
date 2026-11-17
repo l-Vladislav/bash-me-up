@@ -269,22 +269,25 @@
   gap: 14px;
 }
 
+/* Selector and buttons line up by their tops, captions underneath. */
 .side {
   display: flex;
   flex: none;
-  align-items: center;
+  align-items: flex-start;
   gap: clamp(10px, 1.6vw, 22px);
 }
 
 .power {
   display: flex;
   flex: none;
-  align-items: center;
-  gap: clamp(10px, 1.6vw, 22px);
+  align-items: flex-start;
+  gap: clamp(8px, 1.1vw, 14px);
 }
 
+/* Level with the middle of the buttons. */
 .led {
   flex: none;
+  margin-top: 8.5px;
   width: 9px;
   height: 9px;
   border-radius: 50%;

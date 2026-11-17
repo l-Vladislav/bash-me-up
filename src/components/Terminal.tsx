@@ -1,5 +1,6 @@
 import { useEffect, useEffectEvent, useRef } from 'react';
 import type { MouseEvent } from 'react';
+import { feed, play } from '../audio/sound';
 import { COARSE_POINTER_QUERY, useMediaQuery } from '../hooks/useMediaQuery';
 import { usePager } from '../hooks/usePager';
 import type { Shell } from '../hooks/useTerminal';
@@ -67,12 +68,27 @@ export function Terminal({ shell, disabled = false }: TerminalProps) {
   }, []);
 
   const handleClick = (event: MouseEvent<HTMLDivElement>): void => {
+    // A command or a link in the output is a key pressed with the mouse.
+    if (isControl(event.target)) play('enter');
     if (busy) skip();
     // A tap on a link or command is not a wish to type: on a phone, focusing
     // the prompt here would pop up the keyboard over the page it opens.
     else if (!isControl(event.target) && !hasSelection()) {
       inputRef.current?.focus({ preventScroll: true });
     }
+  };
+
+  // Every row that rolls by is heard, whether the output pushed it or the reader did.
+  const scrolledTo = useRef(0);
+  const handleScroll = (): void => {
+    pager.onScroll();
+    const element = scrollRef.current;
+    if (!element) return;
+    const row = Number.parseFloat(getComputedStyle(element).lineHeight) || 16;
+    const rows = Math.abs(element.scrollTop - scrolledTo.current) / row;
+    if (rows < 1) return;
+    feed(rows);
+    scrolledTo.current = element.scrollTop;
   };
 
   // Enter on an empty line turns the page, as in `more`; anything typed runs as usual.
@@ -102,7 +118,7 @@ export function Terminal({ shell, disabled = false }: TerminalProps) {
         ref={scrollRef}
         className={paging ? `${styles.viewport} ${styles.paging}` : styles.viewport}
         onClick={handleClick}
-        onScroll={pager.onScroll}
+        onScroll={handleScroll}
         onWheel={pager.onUserScroll}
         onTouchMove={pager.onUserScroll}
       >
@@ -127,7 +143,14 @@ export function Terminal({ shell, disabled = false }: TerminalProps) {
       </div>
 
       {paging && (
-        <button type="button" className={styles.more} onClick={pager.next}>
+        <button
+          type="button"
+          className={styles.more}
+          onClick={() => {
+            play('button');
+            pager.next();
+          }}
+        >
           <span className={styles.moreLabel}>-- MORE ({pager.progress}%) --</span>
           <span className={styles.moreAction}>next ▸</span>
         </button>

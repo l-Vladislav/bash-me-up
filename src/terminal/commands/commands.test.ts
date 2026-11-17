@@ -132,7 +132,8 @@ describe('content commands', () => {
 
     const page = execute(`gallery ${album?.folder} 1`, context).lines;
     expect(page.find((line) => line.image)?.image?.src).toBe(picture?.src);
-    expect(page.map(toPlainText).join('\n')).toContain(picture?.caption);
+    // Under the picture: its name from the list, then its caption.
+    expect(page.map(toPlainText)).toContain(`${picture?.title} - ${picture?.caption}`);
   });
 
   it('gallery names the albums it has when asked for one it does not', () => {
@@ -196,6 +197,12 @@ describe('system commands', () => {
     expect(execute('crt', context).effects).toEqual([{ type: 'set-crt', enabled: false }]);
     expect(execute('crt on', context).effects).toEqual([{ type: 'set-crt', enabled: true }]);
     expect(execute('crt maybe', context).effects).toBeUndefined();
+  });
+
+  it('sound toggles or sets the speaker', () => {
+    expect(execute('sound', context).effects).toEqual([{ type: 'set-sound', enabled: true }]);
+    expect(execute('sound off', context).effects).toEqual([{ type: 'set-sound', enabled: false }]);
+    expect(execute('sound loud', context).effects).toBeUndefined();
   });
 
   it('clear and reboot are pure effects', () => {

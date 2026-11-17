@@ -13,11 +13,17 @@ export class LinePrinter {
   private readonly sink: Sink;
   private readonly onBusyChange: BusyListener;
   private readonly interval: number;
+  private readonly pace: number;
 
-  constructor(sink: Sink, onBusyChange: BusyListener, interval = 12) {
+  /**
+   * `interval` is the pause before a line without a `delay` of its own;
+   * `pace` stretches every pause, 1.15 printing 15% slower.
+   */
+  constructor(sink: Sink, onBusyChange: BusyListener, interval = 12, pace = 1) {
     this.sink = sink;
     this.onBusyChange = onBusyChange;
     this.interval = interval;
+    this.pace = pace;
   }
 
   get busy(): boolean {
@@ -54,7 +60,7 @@ export class LinePrinter {
 
   private schedule(): void {
     const delay = this.queue[0]?.delay ?? this.interval;
-    this.timer = setTimeout(() => this.tick(), delay);
+    this.timer = setTimeout(() => this.tick(), delay * this.pace);
   }
 
   private tick(): void {

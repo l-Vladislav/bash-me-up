@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { CSSProperties, MouseEvent } from 'react';
+import { chatter } from '../audio/sound';
 import { REDUCED_MOTION_QUERY, useMediaQuery } from '../hooks/useMediaQuery';
 import type { Line, Motion, Span } from '../terminal/line';
 import styles from './Terminal.module.css';
@@ -16,6 +17,9 @@ interface OutputLineProps {
  * row itself once the frames have played (or at once, for visitors who asked
  * for reduced motion).
  */
+const textLength = (spans: readonly Span[]): number =>
+  spans.reduce((total, span) => total + span.text.replace(/\s/g, '').length, 0);
+
 const useFrames = ({ spans, frames, loop = false }: Line, still: boolean): readonly Span[] => {
   const [at, setAt] = useState(0);
   const reduced = useMediaQuery(REDUCED_MOTION_QUERY);
@@ -24,9 +28,13 @@ const useFrames = ({ spans, frames, loop = false }: Line, still: boolean): reado
 
   useEffect(() => {
     if (!frame) return undefined;
-    const timer = setTimeout(() => setAt(loop ? (at + 1) % count : at + 1), frame.ms);
+    const timer = setTimeout(() => {
+      // The row redrawn: it chatters like fresh output. A looping row would never stop.
+      if (!loop) chatter(textLength(frames?.[at + 1]?.spans ?? spans));
+      setAt(loop ? (at + 1) % count : at + 1);
+    }, frame.ms);
     return () => clearTimeout(timer);
-  }, [frame, at, loop, count]);
+  }, [frame, at, loop, count, frames, spans]);
 
   return frame?.spans ?? spans;
 };

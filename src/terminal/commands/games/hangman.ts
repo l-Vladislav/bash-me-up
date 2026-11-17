@@ -1,5 +1,5 @@
-import { animated, blank, bright, dim, line } from '../../line';
-import type { Line } from '../../line';
+import { animated, blank, bright, cued, dim, line } from '../../line';
+import type { Cue, Line } from '../../line';
 import type { Command, Session, SessionStep } from '../types';
 import { pick, playAgain, quitHint } from './shared';
 
@@ -78,12 +78,13 @@ const missesOf = ({ word, guessed }: Round): string[] =>
 const masked = ({ word, guessed }: Round): string =>
   [...word].map((letter) => (guessed.has(letter) ? letter : '_')).join(' ');
 
-const board = (round: Round): Line[] => {
+/** The drawing and the word; `cue` sounds as the word shows, for the letter just tried. */
+const board = (round: Round, cue?: Cue): Line[] => {
   const misses = missesOf(round);
   return [
     ...gallows(misses.length),
     blank(),
-    line(bright(masked(round))),
+    cued(cue, line(bright(masked(round)))),
     line(dim(`misses: ${misses.length > 0 ? misses.join(' ') : '-'}`)),
     blank(),
   ];
@@ -94,8 +95,8 @@ const end = (round: Round, won: boolean): SessionStep => ({
     ...(won ? gallows(missesOf(round).length) : hanged()),
     blank(),
     won
-      ? line('You got it: ', bright(round.word), '.')
-      : line('Hanged. The word was ', bright(round.word), '.'),
+      ? cued('win', line('You got it: ', bright(round.word), '.'))
+      : cued('lose', line('Hanged. The word was ', bright(round.word), '.')),
     blank(),
     playAgain('hangman'),
   ],
@@ -112,7 +113,7 @@ const play = (round: Round): Session => ({
       const next = { ...round, guessed: new Set([...round.guessed, attempt]) };
       return missesOf(next).length >= MAX_MISSES
         ? end(next, false)
-        : { lines: [line(`Not "${attempt}".`), ...board(next)], next: play(next) };
+        : { lines: [line(`Not "${attempt}".`), ...board(next, 'wrong')], next: play(next) };
     }
 
     if (!/^[A-Z]$/.test(attempt)) {
@@ -125,13 +126,15 @@ const play = (round: Round): Session => ({
     const next = { ...round, guessed: new Set([...round.guessed, attempt]) };
     if ([...next.word].every((letter) => next.guessed.has(letter))) return end(next, true);
     if (missesOf(next).length >= MAX_MISSES) return end(next, false);
-    return { lines: board(next), next: play(next) };
+    const found = next.word.includes(attempt);
+    return { lines: board(next, found ? 'right' : 'wrong'), next: play(next) };
   },
 });
 
 export const hangman: Command = {
   name: 'hangman',
   summary: 'Guess the word before the drawing is done',
+  music: 'hangman',
   run: (_args, { random }) => {
     const round: Round = { word: pick(random, WORDS), guessed: new Set() };
     return {

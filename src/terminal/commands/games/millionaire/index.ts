@@ -3,7 +3,7 @@
  * quiz, on system design, Node.js, Python and C#. The questions live in
  * `questions` and `topics/`; this file runs the show.
  */
-import { action, blank, bright, dim, heading, later, line } from '../../../line';
+import { action, blank, bright, cued, dim, heading, later, line } from '../../../line';
 import type { Line, Span } from '../../../line';
 import type { Command, Session, SessionStep } from '../../types';
 import { pick, playAgain, quitHint } from '../shared';
@@ -224,7 +224,10 @@ const lose = (game: Game, choice: number): SessionStep => {
   const question = current(game);
   return {
     lines: [
-      finalAnswer(choice, line('Wrong. The answer was ', bright(answerText(question)), '.')),
+      finalAnswer(
+        choice,
+        cued('lose', line('Wrong. The answer was ', bright(answerText(question)), '.')),
+      ),
       ...later(SUSPENSE_MS, [
         line(dim(question.why)),
         blank(),
@@ -240,7 +243,7 @@ const walk = (game: Game): SessionStep => {
   const question = current(game);
   return {
     lines: [
-      line('You take the money: ', bright(money(won(game.at))), '.'),
+      cued('coin', line('You take the money: ', bright(money(won(game.at))), '.')),
       line(dim(`For the record, the answer was ${answerText(question)}. ${question.why}`)),
       blank(),
       replay(game),
@@ -250,7 +253,7 @@ const walk = (game: Game): SessionStep => {
 
 const win = (game: Game, choice: number): SessionStep => ({
   lines: [
-    finalAnswer(choice, line(bright('Correct. '), current(game).why)),
+    finalAnswer(choice, cued('win', line(bright('Correct. '), current(game).why))),
     ...later(SUSPENSE_MS, [
       blank(),
       ...rain(game.random),
@@ -271,10 +274,14 @@ const correct = (game: Game, choice: number): SessionStep => {
 
   const safe = SAFE.some((index) => index === game.at);
   const next: Game = { ...game, at: game.at + 1, hidden: [] };
-  const verdict = line(
-    bright('Correct. '),
-    current(game).why,
-    ...(safe ? [bright(` ${money(sumAt(game.at))} is now safe.`)] : []),
+  // A sum made safe rings up like money in the bank.
+  const verdict = cued(
+    safe ? 'coin' : 'right',
+    line(
+      bright('Correct. '),
+      current(game).why,
+      ...(safe ? [bright(` ${money(sumAt(game.at))} is now safe.`)] : []),
+    ),
   );
   return ask(next, [finalAnswer(choice, verdict), blank()], SUSPENSE_MS);
 };
@@ -424,6 +431,7 @@ const menu = (): Line[] => [
 export const millionaire: Command = {
   name: 'millionaire',
   summary: 'Fifteen tech questions between you and a million',
+  music: 'millionaire',
   usage: `[${TOPICS.map(({ key }) => key).join('|')}]`,
   options: TOPICS.map(({ key }) => key),
   run: ([subject], { random }) => {

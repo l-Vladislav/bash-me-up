@@ -1,4 +1,4 @@
-import type { Line } from '../line';
+import type { Music, Line } from '../line';
 import type { Phosphor, Settings } from '../settings';
 import type { RemoteRequest } from './admin/remote';
 
@@ -8,6 +8,7 @@ export type Effect =
   | { type: 'reboot' }
   | { type: 'set-phosphor'; phosphor: Phosphor }
   | { type: 'set-crt'; enabled: boolean }
+  | { type: 'set-sound'; enabled: boolean }
   /** Asks the admin API; its answer is printed by `present` in `admin/`. */
   | { type: 'remote'; request: RemoteRequest }
   /** Forgets the admin sign-in (`logout`). Signing in is a `remote` login. */
@@ -70,5 +71,7 @@ export interface Command {
    * neither `help` nor tab completion offers it.
    */
   root?: boolean;
+  /** Plays under the program the command starts, for as long as it runs. */
+  music?: Music;
   run: (args: readonly string[], context: CommandContext) => CommandResult;
 }

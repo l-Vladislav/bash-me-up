@@ -4,7 +4,7 @@
  * picture: from the black sky at staging, down through the clouds, into the
  * fire and steam of the landing burn.
  */
-import { blank, bright, dim, heading, line } from '../../../line';
+import { blank, bright, cued, dim, heading, line } from '../../../line';
 import type { Line, Span } from '../../../line';
 import type { Command, Session, SessionStep } from '../../types';
 import { playAgain, quitHint } from '../shared';
@@ -63,27 +63,33 @@ const bearing = (metres: number): string => {
 const kilometres = (km: number): string =>
   `${Math.abs(km).toFixed(1)} km ${km >= 0 ? 'east' : 'west'} of the tower`;
 
+/** The scenes where the booster is lost: the picture shakes and a blast is heard. */
+const BLASTS: ReadonlySet<Scene> = new Set(['explosion', 'terminated', 'splashdown']);
+
 /** How a scene comes on after `before`: as it was, closer, or rattling. */
 const entering = (scene: Scene, before: Scene | undefined): Entrance => {
   if (scene === before) return { still: true };
-  if (scene === 'explosion' || scene === 'terminated' || scene === 'splashdown') {
-    return { motion: 'shake', after: 400 };
-  }
+  if (BLASTS.has(scene)) return { motion: 'shake', after: 400 };
   if (before === 'falling' || before === 'burn' || before === 'hover') return { motion: 'advance' };
   return {};
 };
 
-/** A screen of the flight: the picture, and the story down its side. */
+/**
+ * A screen of the flight: the picture, and the story down its side. With
+ * `burning`, the engines roar as it comes on.
+ */
 const screen = (
   scene: Scene,
   before: Scene | undefined,
   rows: readonly Line[],
   upcoming: readonly Scene[] = [],
+  burning = false,
 ): Line[] => [
   {
     spans: [],
     clear: before !== undefined,
     image: sceneOf(scene, entering(scene, before), upcoming),
+    ...(BLASTS.has(scene) ? { cue: 'explosion' } : burning ? { cue: 'engine' } : {}),
   },
   ...rows,
 ];
@@ -152,14 +158,14 @@ const contact = (speed: number, offset: number, time: number, before: Scene): Se
   }
   if (speed <= CLEAN) {
     return finale('caught', before, [
-      line(bright('CAUGHT. '), `Into the arms at ${at}.`),
+      cued('win', line(bright('CAUGHT. '), `Into the arms at ${at}.`)),
       line('The arms close under the pins, the engines go quiet, steam drifts off the tower.'),
       line('Mechazilla has it. This booster flies again.'),
     ]);
   }
   if (speed <= HARD) {
     return finale('caught', before, [
-      line(bright('CAUGHT, HARD. '), `Into the arms at ${at}.`),
+      cued('right', line(bright('CAUGHT, HARD. '), `Into the arms at ${at}.`)),
       line('The arms hold it, but the pins are bent and the rails scraped:'),
       line('the tower is out for a week of repairs.'),
     ]);
@@ -187,13 +193,16 @@ const landing = (booster: Booster, showing: Scene): Session => ({
     const next = flight.booster;
     const scene = burning(next, engines);
     const notes: Line[] = [];
-    if (next.fuel === 0 && booster.fuel > 0) notes.push(line(bright('FUEL EXHAUSTED.')));
+    if (next.fuel === 0 && booster.fuel > 0) {
+      notes.push(cued('alarm', line(bright('FUEL EXHAUSTED.'))));
+    }
     return {
       lines: screen(
         scene,
         showing,
         [...telemetry(next), ...notes, blank(), RULES],
         ['burn', 'hover', 'caught', 'explosion'],
+        engines > 0 && booster.fuel > 0,
       ),
       next: landing(next, scene),
     };
@@ -345,6 +354,7 @@ const boosting = (impact: number, random: () => number): Session => ({
           line(dim(`Each turn of the fins, a gust may push it up to ${GUST} m either way.`)),
         ],
         ['coast'],
+        seconds > 0,
       ),
       next: gliding({ offset, turn: 0 }, random),
     };
@@ -354,6 +364,7 @@ const boosting = (impact: number, random: () => number): Session => ({
 export const xlander: Command = {
   name: 'xlander',
   summary: 'Catch a Super Heavy booster with the tower',
+  music: 'xlander',
   run: (_args, { random }) => {
     const impact = Math.round((IMPACT_MIN + random() * IMPACT_SPREAD) * 10) / 10;
     return {

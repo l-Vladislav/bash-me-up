@@ -1,7 +1,10 @@
 import { useState } from 'react';
 import type { KeyboardEvent, RefObject } from 'react';
+import { play } from '../audio/sound';
 import { complete } from '../terminal/completion';
 import styles from './Terminal.module.css';
+
+const MODIFIERS = new Set(['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'AltGraph']);
 
 const hasSelection = (): boolean => (window.getSelection()?.toString() ?? '') !== '';
 
@@ -58,6 +61,8 @@ export function Prompt({
   };
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
+    // Every key clicks, even while output prints; Shift and Ctrl alone do not, as on a VT220.
+    if (!MODIFIERS.has(event.key) && !event.repeat) play(event.key === 'Enter' ? 'enter' : 'key');
     if (waiting) {
       event.preventDefault();
       return;
@@ -70,7 +75,10 @@ export function Prompt({
       replaceValue('');
     } else if (event.key === 'Tab') {
       event.preventDefault();
-      if (completion) replaceValue(complete(value, root));
+      const completed = completion ? complete(value, root) : value;
+      // Nothing to add: the shell rings the bell, as bash does.
+      if (completed === value) play('bell');
+      else replaceValue(completed);
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
       recall(-1);

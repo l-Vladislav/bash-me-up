@@ -1,5 +1,6 @@
 import { useId, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
+import { play, setSoundEnabled } from '../audio/sound';
 import { createBarrelMap, displacementScale, supportsBarrel } from '../crt/barrel';
 import { useElementSize } from '../hooks/useElementSize';
 import type { UpdateSettings } from '../hooks/useSettings';
@@ -7,7 +8,7 @@ import type { Phosphor, Settings } from '../terminal/settings';
 import { Backdrop } from './Backdrop';
 import { Knob } from './Knob';
 import styles from './Monitor.module.css';
-import { PowerSwitch } from './PowerSwitch';
+import { PowerSymbol, PushButton, SpeakerSymbol } from './PushButton';
 import { Selector } from './Selector';
 import type { SelectorOption } from './Selector';
 
@@ -58,6 +59,18 @@ export function Monitor({
 
   const bend = settings.crt && canBend && size.width > 0 && size.height > 0;
   const map = useMemo(() => (bend ? createBarrelMap(size) : ''), [bend, size]);
+
+  // Switching off, the button's clack is the last thing heard. Switching on, the
+  // speaker fades up in silence: a click at that moment is what it must not make.
+  const toggleSound = (on: boolean): void => {
+    if (on) {
+      setSoundEnabled(true);
+    } else {
+      play('latch');
+      setSoundEnabled(false);
+    }
+    onSettingsChange({ sound: on });
+  };
 
   const picture: CSSProperties = {
     filter: `brightness(${scale(settings.brightness, BRIGHTNESS_RANGE)}) contrast(${scale(settings.contrast, CONTRAST_RANGE)})`,
@@ -115,7 +128,12 @@ export function Monitor({
                 onChange={(phosphor) => onSettingsChange({ phosphor })}
               />
               <div className={styles.power}>
-                <PowerSwitch on={powered} onChange={onPowerChange} />
+                <PushButton label="Sound" on={settings.sound} onChange={toggleSound} lit>
+                  <SpeakerSymbol />
+                </PushButton>
+                <PushButton label="Power" on={powered} onChange={onPowerChange}>
+                  <PowerSymbol />
+                </PushButton>
                 <span
                   className={styles.led}
                   role="img"

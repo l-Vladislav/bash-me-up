@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { themeLengths } from '../../../audio/sound';
 import { playtime, toPlainText } from '../../line';
 import { DEFAULT_SETTINGS } from '../../settings';
 import { execute, findCommand } from '../index';
@@ -33,6 +34,9 @@ const start = (command: string, random: () => number = () => 0): Session => {
 
 const text = (step: SessionStep): string => step.lines.map(toPlainText).join('\n');
 
+/** The sounds a step makes, in the order of its rows. */
+const cues = (step: SessionStep): string[] => step.lines.flatMap((entry) => entry.cue ?? []);
+
 /** Feeds inputs one by one until they run out or the game ends; returns the last step. */
 const playThrough = (session: Session, inputs: readonly string[]): SessionStep => {
   let current: Session | undefined = session;
@@ -45,6 +49,33 @@ const playThrough = (session: Session, inputs: readonly string[]): SessionStep =
   return step;
 };
 
+describe('music', () => {
+  const games = [
+    'dungeon',
+    'fight',
+    'millionaire',
+    'xlander',
+    'hangman',
+    'guess',
+    'tictactoe',
+  ] as const;
+
+  it('gives every game a theme of its own', () => {
+    expect(games.map((name) => findCommand(name)?.music)).toEqual(games);
+  });
+
+  it('writes every theme in whole bars, its parts the same length or a bar of it', () => {
+    for (const name of games) {
+      const lengths = themeLengths(name);
+      const longest = Math.max(...lengths);
+      for (const length of lengths) {
+        expect(length % 8, name).toBe(0);
+        expect(longest % length, name).toBe(0);
+      }
+    }
+  });
+});
+
 describe('guess', () => {
   // random 0.42 picks 43
   const game = () => start('guess', () => 0.42);
@@ -56,6 +87,11 @@ describe('guess', () => {
     const won = playThrough(game(), ['50', '40', '43']);
     expect(text(won)).toContain('43 it is! 3 tries.');
     expect(won.next).toBeUndefined();
+  });
+
+  it('beeps at a wrong guess and plays a tune at the right one', () => {
+    expect(cues(playThrough(game(), ['50']))).toEqual(['blip']);
+    expect(cues(playThrough(game(), ['43']))).toEqual(['win']);
   });
 
   it('rejects input that is not a number in range without counting it', () => {
@@ -214,6 +250,13 @@ describe('hangman', () => {
     expect(text(missed)).toContain(`misses: ${word.slice(0, 3)}`);
   });
 
+  it('sounds every letter tried, and the end', () => {
+    expect(cues(playThrough(start('hangman'), [letters[0] ?? '']))).toEqual(['right']);
+    expect(cues(playThrough(start('hangman'), [wrong[0] ?? '']))).toEqual(['wrong']);
+    expect(cues(playThrough(start('hangman'), letters))).toEqual(['win']);
+    expect(cues(playThrough(start('hangman'), wrong.slice(0, MAX_MISSES)))).toEqual(['lose']);
+  });
+
   it('does not charge for repeats or junk', () => {
     expect(text(playThrough(start('hangman'), [wrong[0] ?? '', wrong[0] ?? '']))).toContain(
       'Already tried',
@@ -258,6 +301,7 @@ describe('tictactoe', () => {
     const lazy = () => 0;
     const step = playThrough(start('tictactoe', lazy), ['3', '5', '7']);
     expect(text(step)).toContain('You win!');
+    expect(cues(step)).toEqual(['win']);
     const rows = step.lines.filter((entry) => entry.frames);
     expect(rows).toHaveLength(5);
     const tones = rows[0]?.frames?.map(
@@ -350,6 +394,12 @@ describe('fight', () => {
     expect(text(step)).toContain(`on ${first?.name}'s chest.  -`);
     expect(text(step)).toContain(`on your legs.  -${answer} HP`);
     expect(step.next?.prompt).toBe('hit 1-5>');
+    // Each blow sounds as it lands, not when the row is printed.
+    const blows = step.lines.filter((entry) => entry.cue);
+    expect(blows.map((entry) => entry.cue)).toEqual(['hit', 'hurt']);
+    const [mine, theirs] = blows.map(playtime);
+    expect(mine).toBeGreaterThan(0);
+    expect(theirs).toBeGreaterThan(mine ?? 0);
   });
 
   it('beating every candidate wins the offer', () => {

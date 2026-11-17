@@ -98,7 +98,20 @@ No canvas, no WebGL, no images: the screen is ordinary selectable DOM text.
 - **Tube artefacts.** Scanlines, a drifting refresh band, a faint flicker and an occasional
   one-pixel slip of the horizontal hold. All CSS.
 - **Working controls.** The brightness and contrast knobs turn (drag, mouse wheel, arrow keys,
-  double-click to centre), and the power switch collapses the picture into a dot; switching back on is a cold boot.
+  double-click to centre), and the power button collapses the picture into a dot; switching back on is a cold boot.
+- **Sound.** The square SOUND button (or `sound on`) wakes the speaker; it is off until asked.
+  Every noise is synthesised with Web Audio, no sound files
+  ([`src/audio/sound.ts`](src/audio/sound.ts)): VT220-style keyclicks, a chatter of ticks as
+  rows print or redraw and a line-feed tick for each row that scrolls by, the 780 Hz bell for an
+  unknown command or a Tab with nothing to complete, panel keys and knob detents, and the tube's
+  degaussing hum at power-on and its crackle as it goes off. While the set is on, a quiet
+  background runs under it all: the fan's air, wavering a little, and the transformer's mains
+  hum; it swells up after power-on and winds down at power-off. The games beep on the same speaker:
+  a row of output can carry a `cue` (a blow, a block, gold, a right answer, a win), which sounds
+  as the row comes to rest, so a punch is heard as it lands and a verdict after its ". . .".
+  Every game has a little theme tune of its own, a square-wave lead over a triangle bass, that
+  loops quietly while the game runs and fades when it ends; a command names it as its `music`,
+  and the scores are written out an eighth note a token in `sound.ts`.
 - **Accessibility.** Animations stop under `prefers-reduced-motion`, output is an ARIA live log,
   the knobs are real sliders, and `crt off` gives a flat, effect-free panel. The distortion is
   skipped on Safari and phones, where it would misbehave.
@@ -186,8 +199,9 @@ src/
 │   ├── completion.ts    tab completion
 │   └── printer.ts       line-by-line "serial link" output queue
 ├── crt/                 barrel-distortion maths
+├── audio/               the speaker: clicks, bell and tube noises, synthesised
 ├── hooks/               the thin layer binding the core to React
-├── components/          Monitor, Terminal, Prompt, Knob, PowerSwitch... (CSS Modules)
+├── components/          Monitor, Terminal, Prompt, Knob, PushButton... (CSS Modules)
 └── admin/               the admin page (admin/index.html), behind a password
 stats/                   Cloudflare Worker + D1: the visit counter and the admin API
 ```
