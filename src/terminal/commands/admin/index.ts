@@ -439,6 +439,7 @@ export const present = (request: RemoteRequest, reply: RemoteReply, now: number)
             action('logout'),
             ' to leave.',
           ),
+          line(dim('Root lasts until the page reloads; then sudo asks again.')),
         ],
       };
     case 'stats':

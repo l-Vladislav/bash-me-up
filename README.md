@@ -230,7 +230,9 @@ tries, as in a real shell), the prompt turns into `root@larionov:~#`, and `admin
 commands: `stats [today|7d|30d|90d|year]` with an ASCII curve of visitors a day, `visits` (pick
 a row to open that visitor), `visitor <id>`, `top <list> [period]`, `db`, `export`,
 `countme [on|off]` and `logout` (or `exit`). Nobody else sees these: for a guest they are "command
-not found", and neither `help` nor Tab offers them. The sign-in is shared with the admin page.
+not found", and neither `help` nor Tab offers them. Root is kept in memory only: a reload or
+`reboot` ends it, and `sudo` asks for the password again; nor does the terminal pick up the admin
+page's sign-in.
 
 The password trades for a signed token that lasts 30 days; five tries a minute per address.
 Changing the password signs every browser out:

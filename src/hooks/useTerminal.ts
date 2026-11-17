@@ -1,6 +1,6 @@
 import { useEffect, useEffectEvent, useReducer, useRef, useState } from 'react';
-import { isOwner, loadSession, setOwner, signOut } from '../admin/api';
-import { perform } from '../admin/remote';
+import { isOwner, setOwner } from '../admin/api';
+import { forgetRoot, isRoot, perform } from '../admin/remote';
 import { track } from '../visits';
 import { bootSequence } from '../content/boot';
 import { terminal } from '../content/resume';
@@ -90,8 +90,8 @@ export const useTerminal = (settings: Settings, updateSettings: UpdateSettings):
   const [deepLink] = useState(() => readDeepLink(settings));
   const [session, setSession] = useState<Session | null>(deepLink?.result.session ?? null);
   const printerRef = useRef<LinePrinter | null>(null);
-  // Root: the admin sign-in this browser keeps, shared with the admin page.
-  const [root, setRoot] = useState(() => loadSession() !== null);
+  // Root lasts until the page reloads or the terminal reboots: `sudo` asks every time.
+  const [root, setRoot] = useState(isRoot);
   const [owner, setOwnerMark] = useState(isOwner);
   // A root command waiting for the API; the prompt stays hidden meanwhile.
   const [pending, setPending] = useState(false);
@@ -115,7 +115,7 @@ export const useTerminal = (settings: Settings, updateSettings: UpdateSettings):
     void perform(request).then((reply) => {
       if (mine !== ticket.current) return;
       setPending(false);
-      setRoot(loadSession() !== null);
+      setRoot(isRoot());
       setOwnerMark(isOwner());
       const result = present(request, reply, Date.now());
       setSession(result.session ?? null);
@@ -136,7 +136,7 @@ export const useTerminal = (settings: Settings, updateSettings: UpdateSettings):
         ask(effect.request);
         break;
       case 'sign-out':
-        signOut();
+        forgetRoot();
         setRoot(false);
         break;
       case 'set-owner':
@@ -148,6 +148,14 @@ export const useTerminal = (settings: Settings, updateSettings: UpdateSettings):
         // These change the screen itself: `runCommand` handles them.
         break;
     }
+  };
+
+  /** A power cycle ends root, as it would on the real machine. */
+  const dropRoot = (): void => {
+    ticket.current += 1;
+    setPending(false);
+    forgetRoot();
+    setRoot(false);
   };
 
   const asks = (effects: readonly Effect[] = []): boolean =>
@@ -202,6 +210,7 @@ export const useTerminal = (settings: Settings, updateSettings: UpdateSettings):
           dispatch({ type: 'wipe', trailing: stamp([echo(command, shellPrompt)]) });
           output = bootSequence(settings);
           setBootedAt(Date.now());
+          dropRoot();
           break;
         default:
           apply(effect);
@@ -275,6 +284,7 @@ export const useTerminal = (settings: Settings, updateSettings: UpdateSettings):
     dispatch({ type: 'wipe' });
     setSession(null);
     setBootedAt(Date.now());
+    dropRoot();
     printer.print(bootSequence(settings));
   };
 

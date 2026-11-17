@@ -45,10 +45,11 @@ export type LoginFailure = 'wrong' | 'throttled' | 'offline' | 'unconfigured' | 
 const TIMEOUT = 15_000;
 
 /**
- * Trades the password for a token and keeps it in this browser, which from
- * then on is the owner's: its visits to the site stop counting.
+ * Trades the password for a token. The browser is the owner's from then on:
+ * its visits to the site stop counting. The admin page keeps the token
+ * (`remember`); the terminal holds it in memory only.
  */
-export async function login(password: string): Promise<Session | LoginFailure> {
+export async function login(password: string, remember = true): Promise<Session | LoginFailure> {
   if (!API) return 'unconfigured';
   const response = await fetch(`${API}/api/admin/login`, {
     method: 'POST',
@@ -61,7 +62,7 @@ export async function login(password: string): Promise<Session | LoginFailure> {
   if (response.status === 429) return 'throttled';
   if (!response.ok) return 'failed';
   const session = (await response.json()) as Session;
-  saveSession(session);
+  if (remember) saveSession(session);
   setOwner(true);
   return session;
 }
@@ -86,10 +87,8 @@ async function get(session: Session, path: string): Promise<Response> {
     headers: { Authorization: `Bearer ${session.token}` },
     signal: AbortSignal.timeout(TIMEOUT),
   });
-  if (response.status === 401) {
-    saveSession(null);
-    throw new SignedOut();
-  }
+  // Whoever holds the session forgets it: the admin page on `SignedOut`.
+  if (response.status === 401) throw new SignedOut();
   if (!response.ok) throw new HttpError(response.status);
   return response;
 }

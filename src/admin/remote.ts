@@ -3,7 +3,21 @@
  * describe a request (`remote` effect); this is the one place that does I/O.
  */
 import type { RemoteFailure, RemoteReply, RemoteRequest } from '../terminal/commands/admin/remote';
-import { HttpError, SignedOut, api, loadSession, login } from './api';
+import type { Session } from '../../stats/src/types';
+import { HttpError, SignedOut, api, login } from './api';
+
+/**
+ * The terminal's sign-in lives in memory, never in the browser's storage:
+ * a reload or `reboot` forgets it, and `sudo` asks for the password again.
+ * Nor does the terminal pick up the admin page's sign-in.
+ */
+let session: Session | null = null;
+
+export const isRoot = (): boolean => session !== null && session.expires > Date.now();
+
+export const forgetRoot = (): void => {
+  session = null;
+};
 
 const TYPES = { all: '', views: 'view', commands: 'command' } as const;
 
@@ -16,12 +30,16 @@ const failure = (reason: unknown): RemoteFailure => {
 
 export async function perform(request: RemoteRequest): Promise<RemoteReply> {
   if (request.kind === 'login') {
-    const result = await login(request.password);
-    return typeof result === 'string' ? { ok: false, failure: result } : { ok: true, data: null };
+    const result = await login(request.password, false);
+    if (typeof result === 'string') return { ok: false, failure: result };
+    session = result;
+    return { ok: true, data: null };
   }
 
-  const session = loadSession();
-  if (!session) return { ok: false, failure: 'signed-out' };
+  if (!session || !isRoot()) {
+    forgetRoot();
+    return { ok: false, failure: 'signed-out' };
+  }
   try {
     switch (request.kind) {
       case 'stats':
@@ -37,6 +55,7 @@ export async function perform(request: RemoteRequest): Promise<RemoteReply> {
         return { ok: true, data: await api.exportCsv(session, request.days) };
     }
   } catch (reason) {
+    if (reason instanceof SignedOut) forgetRoot();
     return { ok: false, failure: failure(reason) };
   }
 }
