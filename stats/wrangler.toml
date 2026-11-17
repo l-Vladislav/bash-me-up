@@ -1,4 +1,4 @@
-# Visit counter for the site: npm run stats:deploy
+# Visit counter and admin API for the site: npm run stats:deploy
 # Secrets (not in this file): SALT and PASSWORD, set with
 #   npx wrangler secret put <NAME> --config stats/wrangler.toml
 name = "bash-me-up-api"
@@ -8,6 +8,13 @@ workers_dev = true
 
 [vars]
 ALLOWED_ORIGINS = "https://l-vladislav.github.io"
+ADMIN_URL = "https://l-vladislav.github.io/bash-me-up/admin/"
+
+# Five sign-in attempts a minute per address.
+[[ratelimits]]
+name = "LOGIN_LIMITER"
+namespace_id = "1001"
+simple = { limit = 5, period = 60 }
 
 [[d1_databases]]
 binding = "DB"

@@ -180,7 +180,9 @@ src/
 │   └── printer.ts       line-by-line "serial link" output queue
 ├── crt/                 barrel-distortion maths
 ├── hooks/               the thin layer binding the core to React
-└── components/          Monitor, Terminal, Prompt, Knob, PowerSwitch... (CSS Modules)
+├── components/          Monitor, Terminal, Prompt, Knob, PowerSwitch... (CSS Modules)
+└── admin/               the admin page (admin/index.html), behind a password
+stats/                   Cloudflare Worker + D1: the visit counter and the admin API
 ```
 
 Commands are pure: they take arguments and return lines plus optional _effects_ (`clear`,
@@ -209,6 +211,35 @@ npm run dev        # http://localhost:5173/bash-me-up/
 
 Every push to `main` is linted, tested, built and published to GitHub Pages by
 [`deploy.yml`](.github/workflows/deploy.yml).
+
+### Visits and the admin page
+
+The site reports page views and commands to a Worker in [`stats/`](stats/) (no cookies, no IP
+addresses kept). The numbers are read at
+[`/bash-me-up/admin/`](https://l-vladislav.github.io/bash-me-up/admin/), behind a password:
+
+- **Обзор** — who is on the site right now, today, the period's visitors (and how many are new),
+  the daily curve, and top lists: countries, cities, referrers, entry links, commands, networks,
+  devices, browsers, languages. Refreshes itself every minute.
+- **Лента** — every view and command as it happens; a visitor's tag opens everything they did.
+- **Инструменты** — "don't count me" for this browser (signing in sets it), CSV export, the size
+  and span of the database, links to the deploys.
+
+The password trades for a signed token that lasts 30 days; five tries a minute per address.
+Changing the password signs every browser out:
+
+```bash
+npx wrangler secret put PASSWORD --config stats/wrangler.toml
+npm run stats:deploy
+```
+
+To work on the admin page locally, run the Worker with a local database and point the page at it:
+
+```bash
+npx wrangler d1 execute bash-me-up-stats --local --config stats/wrangler.toml --file stats/schema.sql
+npx wrangler dev --config stats/wrangler.toml --port 8799 --var SALT:dev --var PASSWORD:dev
+VITE_STATS_URL=http://localhost:8799 npm run dev   # then open /bash-me-up/admin/
+```
 
 ## Credits
 

@@ -1,0 +1,37 @@
+:root {
+  color-scheme: dark;
+  --fg: #ffb000;
+  --dim: color-mix(in oklab, var(--fg) 62%, black);
+  --bar: color-mix(in oklab, var(--fg) 70%, black);
+  --bar-faint: color-mix(in oklab, var(--fg) 16%, var(--bg));
+  --bg: #0b0907;
+  --surface: #110e09;
+  --line: #2a2214;
+  --line-strong: #4a3a1c;
+  --error: #ff6b4a;
+  --glow: 0 0 10px color-mix(in srgb, var(--fg) 38%, transparent);
+  --glow-box: 0 0 10px color-mix(in srgb, var(--fg) 45%, transparent);
+  --font-terminal: 'VT323', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font:
+    14px/1.5 ui-monospace,
+    'Cascadia Mono',
+    Consolas,
+    monospace;
+}
+
+::selection {
+  background: var(--fg);
+  color: var(--bg);
+}

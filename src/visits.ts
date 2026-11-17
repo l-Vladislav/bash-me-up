@@ -11,7 +11,8 @@ const ENDPOINT = import.meta.env.PROD ? import.meta.env.VITE_STATS_URL : undefin
 
 /** `?me` marks this browser as the owner's, `?me=off` clears the mark. */
 const OWNER_PARAM = 'me';
-const OWNER_KEY = 'bash-me-up:owner';
+/** Shared with the admin page, which sets it on sign-in. */
+export const OWNER_KEY = 'bash-me-up:owner';
 const VISITOR_KEY = 'bash-me-up:visitor';
 
 type EventType = 'view' | 'command';
