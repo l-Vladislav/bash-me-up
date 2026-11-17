@@ -12,10 +12,10 @@ import { HERO, RIVALS } from './fight/roster';
 import { MAX_MISSES, WORDS } from './hangman';
 import { LADDER, kept } from './millionaire/index';
 import { TOPICS } from './millionaire/questions';
-import { START, fly } from './lander';
-import type { Craft } from './lander';
 import { machineMove, winner } from './tictactoe';
 import type { Board } from './tictactoe';
+import { BURN_START, DIVERT, FUEL, GRAVITY, HOVER, TURN, fly } from './xlander/flight';
+import type { Booster } from './xlander/flight';
 
 const contextWith = (random: () => number): CommandContext => ({
   settings: DEFAULT_SETTINGS,
@@ -65,67 +65,117 @@ describe('guess', () => {
   });
 });
 
-describe('lander', () => {
-  it('free fall follows the equations of motion', () => {
+describe('xlander', () => {
+  const START: Booster = { ...BURN_START, fuel: FUEL, offset: 0, time: 0 };
+  // random 0.5 puts the impact point 105 km out, and stills every gust.
+  const game = () => start('xlander', () => 0.5);
+  /** Boostback onto the tower, with nothing left for the fins to do. */
+  const toTheBurn = ['42', '0', '0', '0'];
+
+  it('falls freely with the engines off', () => {
     const flight = fly(START, 0);
-    expect(flight.landed).toBe(false);
-    if (flight.landed) return;
-    expect(flight.craft.altitude).toBeCloseTo(1000 - (40 * 5 + 0.5 * 1.62 * 25));
-    expect(flight.craft.velocity).toBeCloseTo(40 + 1.62 * 5);
-    expect(flight.craft.time).toBe(5);
+    expect(flight.caught).toBe(false);
+    if (flight.caught) return;
+    expect(flight.booster.altitude).toBeCloseTo(3000 - (300 * TURN + 0.5 * GRAVITY * TURN ** 2));
+    expect(flight.booster.velocity).toBeCloseTo(300 + GRAVITY * TURN);
+    expect(flight.booster.fuel).toBe(FUEL);
   });
 
-  it('never burns more fuel than is left', () => {
-    const flight = fly({ ...START, fuel: 4 }, 30);
-    expect(flight.landed === false && flight.craft.fuel).toBe(0);
+  it('hovers on three engines', () => {
+    const flight = fly(START, HOVER);
+    expect(flight.caught === false && flight.booster.velocity).toBeCloseTo(300);
+    expect(flight.caught === false && flight.booster.fuel).toBe(FUEL - HOVER * TURN);
   });
 
-  it('a careful pilot can land softly', () => {
-    // Each turn, pick the burn that best tracks a safe descent profile.
-    let craft: Craft = START;
-    for (let turn = 0; turn < 40; turn += 1) {
-      const options = Array.from({ length: 31 }, (_, burn) => ({ burn, flight: fly(craft, burn) }));
-      const landing = options
-        .filter(({ flight }) => flight.landed)
-        .map(({ flight }) => (flight.landed ? Math.abs(flight.speed) : Infinity));
-      if (landing.length > 0 && Math.min(...landing) < 5) return;
+  it('never burns more than is left, and then falls to the arms', () => {
+    const flight = fly({ ...START, fuel: 4 }, 13);
+    expect(flight.caught === false && flight.booster.fuel).toBe(0);
+    if (flight.caught) return;
+    expect(fly(flight.booster, 0).caught).toBe(true);
+  });
 
-      const target = (c: Craft): number => Math.abs(c.velocity - Math.max(3, c.altitude / 12));
+  it('slides towards the arms on lit engines only, and stops there', () => {
+    const off = { ...START, offset: 100 };
+    expect(fly(off, 0)).toMatchObject({ booster: { offset: 100 } });
+    expect(fly(off, 13)).toMatchObject({ booster: { offset: 100 - DIVERT } });
+    expect(fly({ ...START, offset: -10 }, 13)).toMatchObject({ booster: { offset: 0 } });
+  });
+
+  it('a careful pilot can catch it gently', () => {
+    // Each turn, pick the engines that best track a safe descent profile.
+    let booster = START;
+    for (let turn = 0; turn < 60; turn += 1) {
+      const options = Array.from({ length: 131 }, (_, tenths) => fly(booster, tenths / 10));
+      if (options.some((flight) => flight.caught && Math.abs(flight.speed) <= 2)) return;
+
+      // Braking at 2 g leaves headroom below the 3.3 g of all thirteen engines.
+      const safe = (b: Booster): number => Math.max(1, Math.sqrt(2 * 2 * GRAVITY * b.altitude));
+      const target = (b: Booster): number => Math.abs(b.velocity - safe(b));
       const next = options
-        .flatMap(({ flight }) => (flight.landed ? [] : [flight.craft]))
+        .flatMap((flight) => (flight.caught ? [] : [flight.booster]))
         .sort((a, b) => target(a) - target(b))[0];
       if (!next) break;
-      craft = next;
+      booster = next;
     }
-    throw new Error('no soft landing found');
+    throw new Error('no gentle catch found');
   });
 
-  it('crashes in free fall and ends the game', () => {
-    const step = playThrough(start('lander'), Array<string>(20).fill('0'));
-    expect(text(step)).toContain('No survivors');
+  it('every turn is a new picture', () => {
+    let session: Session | undefined = game();
+    for (const input of [...toTheBurn, '0', '13']) {
+      if (!session) throw new Error(`the game ended before ${input}`);
+      const step: SessionStep = session.input(input);
+      expect(step.lines[0]?.image?.side).toBe('scene');
+      expect(step.lines[0]?.clear).toBe(true);
+      session = step.next;
+    }
+  });
+
+  it('the flight director calls go when the boostback aims at the tower', () => {
+    const step = playThrough(game(), ['42']);
+    expect(text(step)).toContain('GO FOR CATCH');
+    expect(text(step)).toContain('lined up with the arms');
+  });
+
+  it('too little boostback drops it in the sea', () => {
+    const step = playThrough(game(), ['10']);
+    expect(text(step)).toContain('NO-GO');
     expect(step.next).toBeUndefined();
   });
 
-  it('coasts to the ground once the fuel is gone', () => {
-    const session = start('lander');
-    const empty = playThrough(session, ['30', '30', '30', '30']);
+  it('too much boostback has it blown up over land', () => {
+    const step = playThrough(game(), ['60']);
+    expect(text(step)).toContain('FLIGHT TERMINATION');
+    expect(step.next).toBeUndefined();
+  });
+
+  it('the fins glide it in, and the wind pushes it about', () => {
+    // random 0 puts the impact point 95 km out, and makes every gust 150 m west.
+    const windy = () => start('xlander', () => 0);
+    expect(text(playThrough(windy(), ['38', '0']))).toContain('150 m west, inland');
+    expect(text(playThrough(windy(), ['37', '1500']))).toContain('850 m east, out to sea');
+  });
+
+  it('never lighting the engines snaps the arms', () => {
+    const step = playThrough(game(), [...toTheBurn, ...Array<string>(20).fill('0')]);
+    expect(text(step)).toContain('They snap');
+    expect(step.lines[0]?.image?.alt).toContain('fireball');
+    expect(step.next).toBeUndefined();
+  });
+
+  it('coasts to the arms once the fuel is gone', () => {
+    const empty = playThrough(game(), [...toTheBurn, ...Array<string>(10).fill('13')]);
     expect(text(empty)).toContain('FUEL EXHAUSTED');
-    expect(empty.next?.input('').next).toBeUndefined();
+    let step = empty;
+    for (let turn = 0; turn < 100 && step.next; turn += 1) step = step.next.input('');
+    expect(step.next).toBeUndefined();
   });
 
-  it('draws the touchdown, and holds the verdict until the craft is down', () => {
-    const step = playThrough(start('lander'), Array<string>(20).fill('0'));
-    const picture = step.lines.filter((entry) => entry.art);
-    expect(picture.at(-1)?.frames?.[0]?.spans[0]?.text).toBe('_'.repeat(21));
-    expect(toPlainText(picture.at(-1) ?? { spans: [] })).toContain('\\___/');
-
-    const wait = Math.max(...picture.map(playtime));
-    const verdict = step.lines.find((entry) => toPlainText(entry).startsWith('Contact at'));
-    expect(verdict?.frames).toEqual([{ spans: [], ms: wait }]);
-  });
-
-  it('rejects burns out of range', () => {
-    expect(text(playThrough(start('lander'), ['31']))).toContain('Burn rate from 0 to 30');
+  it('rejects input out of range', () => {
+    expect(text(playThrough(game(), ['61']))).toContain('from 0 to 60');
+    expect(text(playThrough(game(), ['42', '1501']))).toContain('from 0 to 1500');
+    expect(text(playThrough(game(), [...toTheBurn, '14']))).toContain('from 0 to 13');
+    expect(text(playThrough(game(), [...toTheBurn, 'abc']))).toContain('from 0 to 13');
   });
 });
 

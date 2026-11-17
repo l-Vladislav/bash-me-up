@@ -193,7 +193,7 @@ const sections: readonly Section[] = [
   },
   {
     name: 'games',
-    summary: 'Résumé fight club, a tech quiz for a million, Moon landing and more',
+    summary: 'Résumé fight club, a tech quiz for a million, a booster to catch and more',
     entries: gameCommands,
   },
   {

@@ -3,15 +3,15 @@ import { dungeon } from './dungeon';
 import { fight } from './fight';
 import { guess } from './guess';
 import { hangman } from './hangman';
-import { lander } from './lander';
 import { millionaire } from './millionaire';
 import { tictactoe } from './tictactoe';
+import { xlander } from './xlander';
 
 export const gameCommands: readonly Command[] = [
   dungeon,
   fight,
   millionaire,
-  lander,
+  xlander,
   hangman,
   tictactoe,
   guess,

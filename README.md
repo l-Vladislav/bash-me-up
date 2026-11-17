@@ -31,7 +31,7 @@ the monitor's front panel if you would rather not type.
 guest@larionov:~$ help
 
   portfolio   About me, experience, skills, projects, contacts
-  games       Résumé fight club, a tech quiz for a million, Moon landing and more
+  games       Résumé fight club, a tech quiz for a million, a booster to catch and more
   tools       Calculator, calendar, Morse code, big letters and more
   terminal    Colour, CRT effect, history, clear, reboot
 
@@ -40,7 +40,7 @@ guest@larionov:~$ games
   dungeon     Find the way out, one picture at a time
   fight       Beat the other candidates to the job offer
   millionaire Fifteen tech questions between you and a million
-  lander      Land on the Moon in one piece
+  xlander     Catch a Super Heavy booster with the tower
   hangman     Guess the word before the drawing is done
   tictactoe   Noughts and crosses against the machine
   guess       Guess the number I am thinking of
@@ -68,10 +68,17 @@ guest@larionov:~$ games
 - `millionaire` is the TV quiz with questions on system design, Node.js, Python and C#:
   fifteen of them, three lifelines, and an explanation after every answer. New questions go
   into `src/terminal/commands/games/millionaire/topics/`.
-- The games are animated in plain ASCII: fighters lunge and fall, the lander comes down (or
-  apart), the quiz makes you wait for the verdict. A row of output may carry _frames_ that play in
-  place before it settles, so the animations are data too, and stay still under
-  `prefers-reduced-motion`.
+- `xlander` brings a SpaceX Super Heavy booster home from hot staging the way the real one
+  comes: a boostback burn turns its impact point from far out in the Gulf back to Starbase (miss,
+  and the flight director calls no-go, or range safety blows it up over land), the grid fins glide
+  it in against the wind, and the landing burn brakes it on up to thirteen engines, three holding a
+  hover, while lit engines slide it sideways into the arms of the tower. Every turn is a new
+  picture, from the black sky at staging to the steam round the arms; they were drawn by an image
+  model like the dungeon's, and made with `scripts/picture.py --root xlander`. The physics is in
+  `xlander/flight.ts`.
+- The games are animated in plain ASCII: fighters lunge and fall, the quiz makes you wait for the
+  verdict. A row of output may carry _frames_ that play in place before it settles, so the
+  animations are data too, and stay still under `prefers-reduced-motion`.
 - Deep links: [`?run=projects`](https://l-vladislav.github.io/bash-me-up/?run=projects) opens the
   site and types the command for you.
 
