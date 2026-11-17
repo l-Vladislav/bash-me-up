@@ -22,6 +22,9 @@ const roleDetails = (role: Role): Line[] => [
 /** Width of the `Education:` and `Speaks:` labels on the about page. */
 const LABEL = 'Education: '.length;
 
+/** Where a stat's label starts, past the indent and the value: wrapped rows hang there. */
+const STAT = 2 + 6;
+
 const about: Command = {
   name: 'about',
   summary: 'Who I am and what I do',
@@ -45,7 +48,10 @@ const about: Command = {
       blank(),
       ...profile.summary.map((paragraph) => line(paragraph)),
       blank(),
-      ...profile.stats.map((stat) => line('  ', bright(pad(stat.value, 6)), stat.label)),
+      ...profile.stats.map((stat): Line => ({
+        ...line('  ', bright(pad(stat.value, 6)), stat.label),
+        hang: STAT,
+      })),
       blank(),
       // One row each on a wide screen; on a phone the text wraps under itself.
       ...education.map(({ degree, school }): Line => ({

@@ -6,8 +6,8 @@
     "location": "Israel (open to remote)",
     "summary": [
       "Senior full-stack engineer with 10+ years in product development and 4+ years leading a team of 5.",
-      "Hands-on engineer who works directly with clients: I gather requirements, design the solution, and deliver it end to end. 200+ clients onboarded through payment integrations, plus a real-time BI platform (~300 clients) and a no-code A/B testing platform (~200 clients).",
-      "I specialize in no-code solutions, high-performance reporting and notification services, and payment integrations."
+      "Hands-on engineer who works directly with clients: I gather requirements, design the solution, and deliver it end to end.",
+      "I specialize in no-code solutions, high-performance reporting and notification services, payment integrations, and splitting legacy monoliths into microservices."
     ],
     "stats": [
       {
@@ -36,11 +36,7 @@
       },
       {
         "value": "+30%",
-        "label": "render performance after the Angular 17 migration"
-      },
-      {
-        "value": "-50%",
-        "label": "build time after the same migration"
+        "label": "render speed, -50% build time after the Angular 17 migration"
       }
     ],
     "languages": ["Russian (native)", "English (C1)", "Hebrew (basic)"]
