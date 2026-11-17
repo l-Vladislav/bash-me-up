@@ -17,7 +17,6 @@ const VISITOR_KEY = 'bash-me-up:visitor';
 
 type EventType = 'view' | 'command';
 
-let owner = false;
 let visitor: string | undefined;
 
 /** The random ID this browser was given on its first visit, made now if there is none. */
@@ -46,14 +45,23 @@ const readOwnerMark = (): void => {
       url.searchParams.delete(OWNER_PARAM);
       history.replaceState(history.state, '', url);
     }
-    owner = localStorage.getItem(OWNER_KEY) === '1';
   } catch {
     // Storage blocked: count the visit like any other.
   }
 };
 
+/** Read on every event: signing in from the terminal or `countme` changes it mid-visit. */
+const isOwner = (): boolean => {
+  try {
+    return localStorage.getItem(OWNER_KEY) === '1';
+  } catch {
+    // Storage blocked: count the visit like any other.
+    return false;
+  }
+};
+
 export const track = (type: EventType, name: string): void => {
-  if (!ENDPOINT || owner) return;
+  if (!ENDPOINT || isOwner()) return;
   try {
     const body = JSON.stringify({
       type,

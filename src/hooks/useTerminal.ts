@@ -1,9 +1,13 @@
 import { useEffect, useEffectEvent, useReducer, useRef, useState } from 'react';
+import { isOwner, loadSession, setOwner, signOut } from '../admin/api';
+import { perform } from '../admin/remote';
 import { track } from '../visits';
 import { bootSequence } from '../content/boot';
 import { terminal } from '../content/resume';
 import { execute, findCommand, tokenize } from '../terminal/commands';
-import type { CommandContext, CommandResult, Session } from '../terminal/commands';
+import type { CommandContext, CommandResult, Effect, Session } from '../terminal/commands';
+import { present } from '../terminal/commands/admin';
+import type { RemoteRequest } from '../terminal/commands/admin/remote';
 import { blank, dim, line } from '../terminal/line';
 import type { Line } from '../terminal/line';
 import { LinePrinter } from '../terminal/printer';
@@ -22,6 +26,10 @@ export interface Shell {
   prompt: string;
   /** True while a program such as a game owns the prompt. */
   interactive: boolean;
+  /** The prompt takes a password: nothing typed is shown. */
+  secret: boolean;
+  /** Signed in as the admin: root commands run and complete. */
+  root: boolean;
   /** Handles a typed line: a shell command, or input for the running program. */
   run: (input: string) => void;
   /** Runs a clicked command; a shell command quits the running program first. */
@@ -37,6 +45,7 @@ export interface Shell {
 }
 
 export const PROMPT = `${terminal.user}@${terminal.host}:~$`;
+const ROOT_PROMPT = `root@${terminal.host}:~#`;
 
 const DEEP_LINK_PARAM = 'run';
 
@@ -81,6 +90,13 @@ export const useTerminal = (settings: Settings, updateSettings: UpdateSettings):
   const [deepLink] = useState(() => readDeepLink(settings));
   const [session, setSession] = useState<Session | null>(deepLink?.result.session ?? null);
   const printerRef = useRef<LinePrinter | null>(null);
+  // Root: the admin sign-in this browser keeps, shared with the admin page.
+  const [root, setRoot] = useState(() => loadSession() !== null);
+  const [owner, setOwnerMark] = useState(isOwner);
+  // A root command waiting for the API; the prompt stays hidden meanwhile.
+  const [pending, setPending] = useState(false);
+  const ticket = useRef(0);
+  const shellPrompt = root ? ROOT_PROMPT : PROMPT;
 
   const contextFor = (nextHistory: readonly string[]): CommandContext => ({
     settings,
@@ -88,7 +104,54 @@ export const useTerminal = (settings: Settings, updateSettings: UpdateSettings):
     random: Math.random,
     now: Date.now(),
     bootedAt,
+    root,
+    owner,
   });
+
+  /** Sends a root command's request, then prints what came back. */
+  const ask = (request: RemoteRequest): void => {
+    const mine = ++ticket.current;
+    setPending(true);
+    void perform(request).then((reply) => {
+      if (mine !== ticket.current) return;
+      setPending(false);
+      setRoot(loadSession() !== null);
+      setOwnerMark(isOwner());
+      const result = present(request, reply, Date.now());
+      setSession(result.session ?? null);
+      printerRef.current?.print([...result.lines, ...(result.session ? [] : spacer(result.lines))]);
+    });
+  };
+
+  /** Carries out what a command or a program asked for besides printing. */
+  const apply = (effect: Effect): void => {
+    switch (effect.type) {
+      case 'set-phosphor':
+        updateSettings({ phosphor: effect.phosphor });
+        break;
+      case 'set-crt':
+        updateSettings({ crt: effect.enabled });
+        break;
+      case 'remote':
+        ask(effect.request);
+        break;
+      case 'sign-out':
+        signOut();
+        setRoot(false);
+        break;
+      case 'set-owner':
+        setOwner(effect.owner);
+        setOwnerMark(effect.owner);
+        break;
+      case 'clear':
+      case 'reboot':
+        // These change the screen itself: `runCommand` handles them.
+        break;
+    }
+  };
+
+  const asks = (effects: readonly Effect[] = []): boolean =>
+    effects.some((effect) => effect.type === 'remote');
 
   const boot = useEffectEvent((printer: LinePrinter) => {
     printer.print(bootSequence(settings));
@@ -120,26 +183,28 @@ export const useTerminal = (settings: Settings, updateSettings: UpdateSettings):
     const result = execute(command, contextFor(nextHistory));
     // Only the name of a known command is counted, never what was typed after it.
     const known = findCommand(tokenize(command)[0] ?? '');
-    if (known) track('command', known.name);
-    let output: readonly Line[] = [echo(command), ...result.lines, ...spacer(result.lines)];
+    // Nor the admin's own root commands.
+    if (known && !known.root) track('command', known.name);
+    // An answer from the API brings its own spacer when it comes.
+    let output: readonly Line[] = [
+      echo(command, shellPrompt),
+      ...result.lines,
+      ...(asks(result.effects) ? [] : spacer(result.lines)),
+    ];
 
     for (const effect of result.effects ?? []) {
       switch (effect.type) {
         case 'clear':
-          dispatch({ type: 'wipe', trailing: stamp([echo(command)]) });
+          dispatch({ type: 'wipe', trailing: stamp([echo(command, shellPrompt)]) });
           output = [];
           break;
         case 'reboot':
-          dispatch({ type: 'wipe', trailing: stamp([echo(command)]) });
+          dispatch({ type: 'wipe', trailing: stamp([echo(command, shellPrompt)]) });
           output = bootSequence(settings);
           setBootedAt(Date.now());
           break;
-        case 'set-phosphor':
-          updateSettings({ phosphor: effect.phosphor });
-          break;
-        case 'set-crt':
-          updateSettings({ crt: effect.enabled });
-          break;
+        default:
+          apply(effect);
       }
     }
 
@@ -151,15 +216,18 @@ export const useTerminal = (settings: Settings, updateSettings: UpdateSettings):
   /** Feeds one line to the running program. */
   const feed = (printer: LinePrinter, program: Session, input: string): void => {
     const text = input.trim();
-    if (QUIT_WORDS.has(text.toLowerCase())) {
+    if (!program.secret && QUIT_WORDS.has(text.toLowerCase())) {
       setSession(null);
       printer.print([echo(text, program.prompt), blank()]);
       return;
     }
 
-    const step = program.input(text);
+    // A password is neither shown nor kept: the echo leaves it out.
+    const step = program.input(program.secret ? input : text);
     setSession(step.next ?? null);
-    printer.print([echo(text, program.prompt), ...step.lines, ...(step.next ? [] : [blank()])]);
+    const ending = step.next || asks(step.effects) ? [] : [blank()];
+    printer.print([echo(program.secret ? '' : text, program.prompt), ...step.lines, ...ending]);
+    step.effects?.forEach(apply);
   };
 
   /** The printer, with any printout in progress finished first. */
@@ -186,7 +254,11 @@ export const useTerminal = (settings: Settings, updateSettings: UpdateSettings):
   };
 
   const interrupt = (typed: string): void => {
-    takePrinter()?.print([echo(`${typed}^C`, session?.prompt), ...(session ? [blank()] : [])]);
+    const shown = session?.secret ? '' : typed;
+    takePrinter()?.print([
+      echo(`${shown}^C`, session?.prompt ?? shellPrompt),
+      ...(session ? [blank()] : []),
+    ]);
     setSession(null);
   };
 
@@ -208,10 +280,12 @@ export const useTerminal = (settings: Settings, updateSettings: UpdateSettings):
 
   return {
     screen,
-    busy,
+    busy: busy || pending,
     history,
-    prompt: session?.prompt ?? PROMPT,
+    prompt: session?.prompt ?? shellPrompt,
     interactive: session !== null,
+    secret: session?.secret ?? false,
+    root,
     run,
     click,
     interrupt,

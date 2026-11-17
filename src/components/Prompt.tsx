@@ -12,6 +12,10 @@ interface PromptProps {
   history: readonly string[];
   /** Tab completes shell commands; off while a program owns the prompt. */
   completion: boolean;
+  /** A password: what is typed stays invisible, as in a real terminal. */
+  secret?: boolean;
+  /** Signed in as the admin: completion offers the root commands too. */
+  root?: boolean;
   inputRef: RefObject<HTMLInputElement | null>;
   onSubmit: (input: string) => void;
   onInterrupt: (typed: string) => void;
@@ -27,6 +31,8 @@ export function Prompt({
   waiting,
   history,
   completion,
+  secret = false,
+  root = false,
   inputRef,
   onSubmit,
   onInterrupt,
@@ -64,7 +70,7 @@ export function Prompt({
       replaceValue('');
     } else if (event.key === 'Tab') {
       event.preventDefault();
-      if (completion) replaceValue(complete(value));
+      if (completion) replaceValue(complete(value, root));
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
       recall(-1);
@@ -86,11 +92,15 @@ export function Prompt({
   return (
     <label className={waiting ? `${styles.prompt} ${styles.waiting}` : styles.prompt}>
       <span className={styles.dim}>{label} </span>
-      <span>
-        {value.slice(0, caret)}
-        <span className={styles.cursor}>{value.charAt(caret) || ' '}</span>
-        {value.slice(caret + 1)}
-      </span>
+      {secret ? (
+        <span className={styles.cursor}> </span>
+      ) : (
+        <span>
+          {value.slice(0, caret)}
+          <span className={styles.cursor}>{value.charAt(caret) || ' '}</span>
+          {value.slice(caret + 1)}
+        </span>
+      )}
       <input
         ref={inputRef}
         className={styles.input}
@@ -102,7 +112,8 @@ export function Prompt({
         }}
         onSelect={(event) => setCaret(event.currentTarget.selectionStart ?? value.length)}
         onKeyDown={handleKeyDown}
-        aria-label="Terminal command"
+        type={secret ? 'password' : 'text'}
+        aria-label={secret ? 'Password' : 'Terminal command'}
         autoCapitalize="none"
         autoComplete="off"
         autoCorrect="off"

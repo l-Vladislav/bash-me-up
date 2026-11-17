@@ -1,6 +1,7 @@
 import { profile, terminal } from '../../content/resume';
 import { blank, bright, dim, line } from '../line';
 import { PHOSPHORS, isPhosphor } from '../settings';
+import { signOutResult, sudo } from './admin';
 import type { Command } from './types';
 
 const clear: Command = {
@@ -73,29 +74,20 @@ const whoami: Command = {
   }),
 };
 
-const sudo: Command = {
-  name: 'sudo',
-  summary: 'Run a command as root',
-  hidden: true,
-  run: () => ({
-    lines: [
-      line(`${terminal.user} is not in the sudoers file.`),
-      line(dim('This incident will be reported to nobody.')),
-    ],
-  }),
-};
-
 const exit: Command = {
   name: 'exit',
   summary: 'Leave the terminal',
   hidden: true,
-  run: () => ({
-    lines: [
-      line('There is no escape from a 1984 terminal.'),
-      blank(),
-      line(dim('(close the tab)')),
-    ],
-  }),
+  run: (_args, { root }) =>
+    root
+      ? signOutResult()
+      : {
+          lines: [
+            line('There is no escape from a 1984 terminal.'),
+            blank(),
+            line(dim('(close the tab)')),
+          ],
+        },
 };
 
 export const systemCommands: readonly Command[] = [theme, crt, history, clear, reboot];

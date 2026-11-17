@@ -4,7 +4,7 @@
  *
  *   GET /api/admin/overview?days=30     counters, the daily curve, the top lists
  *   GET /api/admin/events?before=&type=  the feed of views and commands, newest first
- *   GET /api/admin/visitor?id=           everything one visitor did
+ *   GET /api/admin/visitor?id=           everything one visitor did (the ID, or its first 4+ characters)
  *   GET /api/admin/health                how big the database is and what it spans
  *   GET /api/admin/export?days=30        the events of the period as CSV
  */
@@ -156,8 +156,21 @@ export async function events(url: URL, db: D1Database): Promise<Response> {
 }
 
 export async function visitor(url: URL, db: D1Database): Promise<Response> {
-  const id = url.searchParams.get('id') ?? '';
-  if (!/^[0-9a-f]{16}$/.test(id)) return json({ error: 'bad id' }, { status: 400 });
+  const typed = (url.searchParams.get('id') ?? '').toLowerCase();
+  if (!/^[0-9a-f]{4,16}$/.test(typed)) return json({ error: 'bad id' }, { status: 400 });
+  // The terminal shows the first few characters; the latest visitor they fit wins.
+  const id =
+    typed.length === 16
+      ? typed
+      : (
+          await db
+            .prepare(
+              'SELECT visitor FROM events WHERE substr(visitor, 1, ?) = ? ORDER BY id DESC LIMIT 1',
+            )
+            .bind(typed.length, typed)
+            .first<{ visitor: string }>()
+        )?.visitor;
+  if (!id) return json({ error: 'not found' }, { status: 404 });
 
   const [summary, story] = await Promise.all([
     db

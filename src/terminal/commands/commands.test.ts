@@ -66,7 +66,11 @@ describe('help', () => {
   });
 
   it('lists every public command in exactly one section, and no hidden ones', () => {
-    const pages = sections.map((section) => output(`help ${section}`));
+    // Root commands live in the admin's own section, read as root.
+    const pages = [
+      ...sections.map((section) => output(`help ${section}`)),
+      output('admin', { root: true }),
+    ];
     for (const command of commands.filter(({ name }) => name !== 'gallery')) {
       const listedIn = pages.filter((page) => page.includes(`  ${command.name} `)).length;
       expect(listedIn, command.name).toBe(command.hidden ? 0 : 1);

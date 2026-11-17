@@ -174,7 +174,7 @@ src/
 ├── content/             typed access to the content, boot sequence
 ├── terminal/            framework-free core, fully unit-tested
 │   ├── line.ts          output model: commands return data, never markup
-│   ├── commands/        one pure function per command + registry, games/, tools/
+│   ├── commands/        one pure function per command + registry, games/, tools/, admin/
 │   ├── screen.ts        reducer for the picture and its fading afterimage
 │   ├── completion.ts    tab completion
 │   └── printer.ts       line-by-line "serial link" output queue
@@ -224,6 +224,13 @@ addresses kept). The numbers are read at
 - **Лента** — every view and command as it happens; a visitor's tag opens everything they did.
 - **Инструменты** — "don't count me" for this browser (signing in sets it), CSV export, the size
   and span of the database, links to the deploys.
+
+The terminal has the same tools for root. `sudo` asks for the password (typed blind, three
+tries, as in a real shell), the prompt turns into `root@larionov:~#`, and `admin` lists the root
+commands: `stats [today|7d|30d|90d|year]` with an ASCII curve of visitors a day, `visits` (pick
+a row to open that visitor), `visitor <id>`, `top <list> [period]`, `db`, `export`,
+`countme [on|off]` and `logout` (or `exit`). Nobody else sees these: for a guest they are "command
+not found", and neither `help` nor Tab offers them. The sign-in is shared with the admin page.
 
 The password trades for a signed token that lasts 30 days; five tries a minute per address.
 Changing the password signs every browser out:

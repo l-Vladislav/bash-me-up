@@ -12,18 +12,23 @@ const commonPrefix = (words: readonly string[]): string => {
 /**
  * Tab completion: extends `input` as far as the matching candidates agree.
  * Completes the command name first, then that command's first argument.
+ * Root commands are offered only to the signed-in admin.
  */
-export const complete = (input: string): string => {
+export const complete = (input: string, root = false): string => {
   const trimmed = input.trimStart();
   const [head = '', ...rest] = trimmed.split(/\s+/);
 
   if (rest.length === 0) {
-    const names = commands.map((command) => command.name).filter((name) => name.startsWith(head));
+    const names = commands
+      .filter((command) => root || !command.root)
+      .map((command) => command.name)
+      .filter((name) => name.startsWith(head));
     if (names.length === 0) return input;
     return names.length === 1 ? `${names[0]} ` : commonPrefix(names);
   }
 
-  const options = findCommand(head)?.options;
+  const command = findCommand(head);
+  const options = command && (root || !command.root) ? command.options : undefined;
   if (!options || rest.length > 1) return input;
 
   const partial = rest[0] ?? '';

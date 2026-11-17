@@ -1,5 +1,6 @@
-import { action, blank, bright, dim, heading, line } from '../line';
+import { action, blank, bright, dim, heading, line, link } from '../line';
 import type { Line } from '../line';
+import { rootCommands } from './admin';
 import { contentCommands, galleryCommands } from './content';
 import { fileCommands } from './files';
 import { gameCommands } from './games';
@@ -31,13 +32,16 @@ interface Group {
 }
 
 interface Section {
-  name: (typeof SECTIONS)[number];
+  /** `admin` is left out of SECTIONS, so tab completion never offers it. */
+  name: (typeof SECTIONS)[number] | 'admin';
   summary: string;
   entries: readonly Command[];
   /** A section that is one command: its row, and `help <name>`, run that command instead. */
   opens?: string;
   /** Splits a long section into titled groups on its help page. */
   groups?: readonly Group[];
+  /** Only the signed-in admin sees it. */
+  root?: boolean;
 }
 
 const INDENT = '  ';
@@ -92,10 +96,14 @@ const manPage = (command: Command): Line[] => {
   ];
 };
 
-const overview = (): Line[] => [
+/** The sections this visitor may see: the admin's only after `sudo`. */
+const sectionsFor = ({ root = false }: CommandContext): Section[] =>
+  sections.filter((section) => root || !section.root);
+
+const overview = (context: CommandContext): Line[] => [
   heading('help'),
   blank(),
-  ...menu(sections, ({ name, summary, opens }) => ({
+  ...menu(sectionsFor(context), ({ name, summary, opens }) => ({
     command: opens ?? `help ${name}`,
     name,
     summary,
@@ -132,21 +140,23 @@ const help: Command = {
   usage: '[section]',
   options: SECTIONS,
   run: ([topic], context) => {
-    if (topic === undefined) return { lines: overview() };
+    if (topic === undefined) return { lines: overview(context) };
 
-    const section = sections.find(({ name }) => name === topic.toLowerCase());
+    const section = sectionsFor(context).find(({ name }) => name === topic.toLowerCase());
     const opens = section?.opens === undefined ? undefined : findCommand(section.opens);
     if (opens) return opens.run([], context);
     if (section) return { lines: sectionPage(section) };
 
     // `help calc` reads like `man calc`.
     const command = findCommand(topic);
-    if (command && !command.hidden) return { lines: manPage(command) };
+    if (command && !command.hidden && (!command.root || context.root)) {
+      return { lines: manPage(command) };
+    }
     return {
       lines: [
         line(
           `help: no section "${topic}". Try `,
-          ...sections.flatMap(({ name }, index) => [
+          ...sectionsFor(context).flatMap(({ name }, index) => [
             ...(index > 0 ? [', '] : []),
             action(`help ${name}`, name),
           ]),
@@ -160,10 +170,11 @@ const man: Command = {
   name: 'man',
   summary: 'Manual page for a command',
   usage: '<command>',
-  run: ([name]) => {
+  run: ([name], { root }) => {
     if (name === undefined) return { lines: [line('What manual page do you want?')] };
     const command = findCommand(name);
-    if (!command || command.hidden) return { lines: [line(`No manual entry for ${name}`)] };
+    if (!command || command.hidden || (command.root && !root))
+      return { lines: [line(`No manual entry for ${name}`)] };
     return { lines: manPage(command) };
   },
 };
@@ -199,12 +210,38 @@ const sections: readonly Section[] = [
     summary: 'Colour, CRT effect, history, clear, reboot',
     entries: [help, man, ...systemCommands],
   },
+  {
+    name: 'admin',
+    summary: 'Root only: who visits the site, live feed, database',
+    entries: [...rootCommands],
+    root: true,
+    opens: 'admin',
+  },
 ];
+
+/** The admin section's own page, with the way to the admin page on the web. */
+const admin: Command = {
+  name: 'admin',
+  summary: 'The root commands',
+  root: true,
+  hidden: true,
+  run: () => {
+    const page = sectionPage({ name: 'admin', summary: '', entries: rootCommands });
+    return {
+      lines: [
+        ...page,
+        blank(),
+        line(dim('The same, with charts: '), link('the admin page', 'admin/')),
+      ],
+    };
+  },
+};
 
 export const commands: readonly Command[] = [
   ...sections.flatMap(({ entries }) => entries),
   ...fileCommands,
   ...hiddenCommands,
+  admin,
 ];
 
 const registry = new Map(commands.map((command) => [command.name, command]));
@@ -230,7 +267,8 @@ export const execute = (input: string, context: CommandContext): CommandResult =
   if (name === undefined) return { lines: [] };
 
   const command = findCommand(name);
-  if (!command) {
+  // A root command does not exist for anyone else: not even its name gives it away.
+  if (!command || (command.root && !context.root)) {
     return {
       lines: [
         line(`${typed[0] ?? name}: command not found. Type `, action('help'), ' for the list.'),

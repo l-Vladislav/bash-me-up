@@ -26,7 +26,8 @@ const scrollToEnd = (element: HTMLElement | null): void => {
 const ignoreCommand = (): void => undefined;
 
 export function Terminal({ shell, disabled = false }: TerminalProps) {
-  const { screen, busy, history, prompt, interactive, run, click, interrupt, clear, skip } = shell;
+  const { screen, busy, history, prompt, interactive, secret, root } = shell;
+  const { run, click, interrupt, clear, skip } = shell;
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   // On a touchscreen focus means a keyboard covering half the screen: wait for a tap.
@@ -116,6 +117,8 @@ export function Terminal({ shell, disabled = false }: TerminalProps) {
           waiting={busy}
           history={interactive ? [] : history}
           completion={!interactive}
+          secret={secret}
+          root={root}
           inputRef={inputRef}
           onSubmit={handleSubmit}
           onInterrupt={interrupt}
